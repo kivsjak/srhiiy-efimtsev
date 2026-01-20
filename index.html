@@ -3,90 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Hub (Diagnostic)</title>
+    <title>Smart Game Hub</title>
     <style>
-        body { font-family: monospace; background: #0d1117; color: #c9d1d9; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-        h1 { color: #58a6ff; margin-bottom: 30px; }
-        .container { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
-        .section { background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; width: 300px; min-height: 150px; }
-        .title { font-weight: bold; border-bottom: 2px solid #30363d; padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        h1 { background: linear-gradient(90deg, #58a6ff, #bc8cff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem; }
+        .container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+        .section { background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; width: 320px; min-height: 200px; }
+        .title { font-weight: bold; border-bottom: 2px solid #30363d; padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         .done .title { color: #2ea043; border-color: #2ea043; }
         .beta .title { color: #f2cc60; border-color: #f2cc60; }
-        a { display: block; background: #21262d; color: #fff; padding: 10px; margin-bottom: 8px; border-radius: 6px; text-decoration: none; }
-        a:hover { background: #1f6feb; }
-        .error { color: #ff7b72; font-size: 0.8em; border: 1px solid #ff7b72; padding: 10px; border-radius: 6px; background: #3a1d1d; }
-        .empty { color: #8b949e; font-style: italic; }
+        a { display: block; background: #21262d; color: #fff; padding: 12px; margin-bottom: 8px; border-radius: 6px; text-decoration: none; border: 1px solid transparent; transition: 0.2s; }
+        a:hover { background: #30363d; transform: translateX(5px); border-color: #8b949e; }
+        .error { color: #ff7b72; background: #3a1d1d; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
+        .empty { color: #8b949e; font-style: italic; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <h1>🔍 GAMES HUB</h1>
+    <h1>🎮 INTERNAL GAME HUB</h1>
+    <p>Файли сортуються автоматично за назвою</p>
 
     <div class="container">
         <div class="section done">
             <div class="title">✅ Release Ready</div>
-            <div id="done-list">Scanning...</div>
+            <div id="done-list"><div class="empty">Пошук...</div></div>
         </div>
 
         <div class="section beta">
             <div class="title">🚧 Beta Testing</div>
-            <div id="beta-list">Scanning...</div>
+            <div id="beta-list"><div class="empty">Пошук...</div></div>
         </div>
     </div>
 
     <script>
-        // --- НАЛАШТУВАННЯ ---
         const USER = 'kivsjak';         
         const REPO = 'srhiiy-efimtsev'; 
-        const BRANCH = 'main'; // <--- ПЕРЕВІР, ЯКЩО НЕ ПРАЦЮЄ, СПРОБУЙ 'master'
-        // --------------------
 
-        async function loadGames(folder, elementId) {
-            const box = document.getElementById(elementId);
-            // Додаємо ?ref=${BRANCH}, щоб точно шукати в правильній гілці
-            const url = `https://api.github.com/repos/${USER}/${REPO}/contents/${folder}?ref=${BRANCH}`;
+        async function initHub() {
+            const doneBox = document.getElementById('done-list');
+            const betaBox = document.getElementById('beta-list');
+            
+            // Запит до КОРЕНЯ репозиторію
+            const url = `https://api.github.com/repos/${USER}/${REPO}/contents/`;
 
             try {
                 const response = await fetch(url);
+                if (response.status === 403) throw new Error("Ліміт запитів GitHub вичерпано. Спробуй через годину.");
+                if (!response.ok) throw new Error("Не вдалося отримати список файлів.");
 
-                // ОБРОБКА ПОМИЛОК
-                if (response.status === 403) {
-                    throw new Error("⛔ ЛІМІТ ВИЧЕРПАНО. GitHub заблокував оновлення на 1 годину. Почекай або зміни Wi-Fi.");
-                }
-                if (response.status === 404) {
-                    throw new Error(`⚠️ Папка '${folder}' не знайдена. Перевір регістр (Beta vs beta) або чи вона існує.`);
-                }
-                if (!response.ok) {
-                    throw new Error(`Помилка: ${response.status}`);
-                }
+                const files = await response.json();
+                
+                // Очищуємо списки
+                doneBox.innerHTML = '';
+                betaBox.innerHTML = '';
 
-                const data = await response.json();
-                const games = data.filter(file => file.name.toUpperCase().endsWith('.HTML'));
+                let doneCount = 0;
+                let betaCount = 0;
 
-                box.innerHTML = ''; // Очистка
+                files.forEach(file => {
+                    const name = file.name.toLowerCase();
+                    
+                    // Перевіряємо, чи це HTML файл
+                    if (name.endsWith('.html') && name !== 'index.html') {
+                        
+                        const link = document.createElement('a');
+                        link.href = file.name; // Файл лежить в корені, тому просто ім'я
+                        link.target = "_blank";
+                        link.innerText = file.name.replace(/\.html$/i, '');
 
-                if (games.length === 0) {
-                    box.innerHTML = '<div class="empty">Тут пусто (але папка є)</div>';
-                    return;
-                }
-
-                games.forEach(file => {
-                    const link = document.createElement('a');
-                    link.href = `${folder}/${file.name}`; // Простий шлях
-                    link.target = "_blank";
-                    link.innerText = file.name.replace(/\.html$/i, '');
-                    box.appendChild(link);
+                        // Сортування за ключовим словом у НАЗВІ ФАЙЛУ
+                        if (name.includes('done')) {
+                            doneBox.appendChild(link);
+                            doneCount++;
+                        } else if (name.includes('beta')) {
+                            betaBox.appendChild(link);
+                            betaCount++;
+                        }
+                    }
                 });
 
+                if (doneCount === 0) doneBox.innerHTML = '<div class="empty">Немає файлів з "done"</div>';
+                if (betaCount === 0) betaBox.innerHTML = '<div class="empty">Немає файлів з "beta"</div>';
+
             } catch (err) {
-                console.error(err);
-                box.innerHTML = `<div class="error">${err.message}</div>`;
+                doneBox.innerHTML = betaBox.innerHTML = `<div class="error">${err.message}</div>`;
             }
         }
 
-        loadGames('done', 'done-list');
-        loadGames('beta', 'beta-list');
+        initHub();
     </script>
-
 </body>
 </html>
