@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WindowGlass Game Hub</title>
+    <title>WindowGlass Hub | Stable v3</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Кольори з твого конфігу Windhawk */
             --bg-tint: rgba(166, 166, 166, 0.12);
-            --glass-border: rgba(255, 255, 255, 0.25);
             --text-muted: #a6a6a6;
             --mouse-x: 50%;
             --mouse-y: 50%;
@@ -19,114 +17,90 @@
 
         body {
             overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            /* Динамічний триколірний фон */
-            background: linear-gradient(135deg, #1a1a1a, #0d1117, #020408);
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #0f0f0f, #05070a, #010204);
             background-size: 400% 400%;
             animation: deepFlow 30s ease infinite;
         }
 
-        /* Анімація перетікання фону */
         @keyframes deepFlow {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* В'язкий прожектор на фоні */
         .spotlight {
             position: fixed;
             inset: 0;
             background: radial-gradient(
                 circle 1000px at var(--mouse-x) var(--mouse-y), 
-                rgba(88, 166, 255, 0.08) 0%, 
+                rgba(166, 166, 166, 0.07) 0%, 
                 transparent 100%
             );
             z-index: -1;
             pointer-events: none;
         }
 
-        #game-stage {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 40px;
-            z-index: 10;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            color: var(--text-muted);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            opacity: 0.8;
-        }
-
-        /* МАЙЖЕ НЕПОМІТНЕ ПЛАВАННЯ */
         #main-container {
             display: flex;
             gap: 20px;
             padding: 25px;
-            border-radius: 25px; /* CornerRadius=25 */
+            border-radius: 25px;
             background: var(--bg-tint);
-            backdrop-filter: blur(25px); /* BlurAmount="25" */
+            backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            
-            /* Складна рамка як у Windhawk LinearGradientBrush */
-            border-top: 1.2px solid rgba(255, 255, 255, 0.35);
-            border-left: 1.2px solid rgba(255, 255, 255, 0.15);
+            /* Windhawk Border System */
+            border-top: 1.2px solid rgba(255, 255, 255, 0.25);
+            border-left: 1.2px solid rgba(255, 255, 255, 0.1);
             border-right: 1.2px solid rgba(0, 0, 0, 0.2);
             border-bottom: 1px solid rgba(0, 0, 0, 0.4);
-            
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            will-change: transform;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        .panel {
-            width: 300px;
-            min-height: 380px;
-            padding: 20px;
+        .panel { 
+            width: 300px; 
+            padding: 10px;
         }
+
+        /* Обмежуємо висоту для запобігання вильоту за екран */
+        .list-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        /* Стильний прихований скролбар */
+        .list-container::-webkit-scrollbar { width: 4px; }
+        .list-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
         .label {
-            font-size: 0.7rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 25px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 0.7rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 3px;
+            margin-bottom: 20px; color: var(--text-muted);
+            display: flex; align-items: center; gap: 8px;
+            opacity: 0.6;
         }
 
         .game-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 16px 20px;
-            border-radius: 15px;
-            color: var(--text-muted);
-            text-decoration: none;
-            margin-bottom: 10px;
-            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 18px 22px; border-radius: 18px;
+            color: var(--text-muted); text-decoration: none;
+            margin-bottom: 12px;
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .game-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.07);
+            transform: scale(1.02) translateX(4px);
             color: #fff;
-            border-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .game-card b { font-size: 0.95rem; font-weight: 600; }
+        .game-card i { font-style: normal; font-size: 10px; opacity: 0.3; font-weight: 800; }
     </style>
 </head>
 <body>
@@ -134,40 +108,39 @@
 <div class="spotlight"></div>
 
 <div id="game-stage">
-    <h1>GAMES DEMO</h1>
-
     <div id="main-container">
         <div class="panel">
-            <div class="label">● Stable Builds</div>
-            <div id="done-list"></div>
+            <div class="label">● Stable</div>
+            <div id="done-list" class="list-container"></div>
         </div>
         <div class="panel">
-            <div class="label">● Experimental</div>
-            <div id="beta-list"></div>
+            <div class="label">● Testing</div>
+            <div id="beta-list" class="list-container"></div>
         </div>
     </div>
 </div>
 
 <script>
-    let targetX = 50, targetY = 50;
-    let currentX = 50, currentY = 50;
+    // Ініціалізація по центру, щоб не було багу з (0,0)
+    let targetX = innerWidth / 2, targetY = innerHeight / 2;
+    let currentX = targetX, currentY = targetY;
 
     document.addEventListener('mousemove', (e) => {
-        targetX = (e.clientX / window.innerWidth) * 100;
-        targetY = (e.clientY / window.innerHeight) * 100;
+        targetX = e.clientX;
+        targetY = e.clientY;
     });
 
-    // МІНІМАЛЬНЕ ПЛАВАННЯ (range: 0.7)
+    // Оптимізований Floater (плавання)
     class Floater {
         constructor(el, range) {
             this.el = el;
             this.range = range;
-            this.angleX = Math.random() * 5;
-            this.angleY = Math.random() * 5;
+            this.angleX = Math.random() * 6;
+            this.angleY = Math.random() * 6;
         }
         update() {
-            this.angleX += 0.008;
-            this.angleY += 0.007;
+            this.angleX += 0.006;
+            this.angleY += 0.005;
             const x = Math.sin(this.angleX) * this.range;
             const y = Math.cos(this.angleY) * this.range;
             this.el.style.transform = `translate(${x}px, ${y}px)`;
@@ -175,40 +148,51 @@
     }
 
     const container = document.getElementById('main-container');
-    const floater = new Floater(container, 0.7);
+    const panelFloat = new Floater(container, 0.8);
 
     function animate() {
-        // Екстремальна в'язкість для фону
-        currentX += (targetX - currentX) * 0.008; 
-        currentY += (targetY - currentY) * 0.008;
-        document.body.style.setProperty('--mouse-x', `${currentX}%`);
-        document.body.style.setProperty('--mouse-y', `${currentY}%`);
+        // В'язкість ліхтарика
+        currentX += (targetX - currentX) * 0.009; 
+        currentY += (targetY - currentY) * 0.009;
         
-        floater.update();
+        const px = (currentX / innerWidth) * 100;
+        const py = (currentY / innerHeight) * 100;
+        
+        document.body.style.setProperty('--mouse-x', `${px}%`);
+        document.body.style.setProperty('--mouse-y', `${py}%`);
+        
+        panelFloat.update();
         requestAnimationFrame(animate);
     }
     animate();
 
     async function load() {
+        const dList = document.getElementById('done-list');
+        const bList = document.getElementById('beta-list');
+        dList.innerHTML = bList.innerHTML = ""; // Чистка перед завантаженням
+        
         try {
             const res = await fetch(`https://api.github.com/repos/kivsjak/srhiiy-efimtsev/contents/?t=${Date.now()}`);
+            if (!res.ok) throw new Error();
             const files = await res.json();
-            const dList = document.getElementById('done-list');
-            const bList = document.getElementById('beta-list');
 
             files.forEach(f => {
                 const n = f.name.toUpperCase();
                 if (n.endsWith('.HTML') && n !== 'INDEX.HTML') {
-                    const target = n.includes('DONE') ? dList : bList;
-                    const card = document.createElement('a');
-                    card.className = 'game-card';
-                    card.href = f.name;
-                    card.target = '_blank';
-                    card.innerHTML = `<b>${f.name.split('.')[0]}</b><span style="font-size: 10px; opacity: 0.5;">EXE</span>`;
-                    target.appendChild(card);
+                    let target = n.includes('DONE') ? dList : (n.includes('BETA') ? bList : null);
+                    if (target) {
+                        const a = document.createElement('a');
+                        a.className = 'game-card';
+                        a.href = f.name;
+                        a.target = '_blank';
+                        a.innerHTML = `<b>${f.name.split('.')[0]}</b><i>EXE</i>`;
+                        target.appendChild(a);
+                    }
                 }
             });
-        } catch(e) {}
+        } catch(e) {
+            dList.innerHTML = "<span style='opacity:0.2; font-size:12px;'>Sync Error.</span>";
+        }
     }
     load();
 </script>
