@@ -3,57 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Games Demo | Lab</title>
+    <title>Dark Liquid Hub</title>
     <style>
         :root {
-            --done: #00ffbd;
-            --beta: #ffde59;
-            --bg: #030508;
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+            --accent: #00d2ff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
         }
 
         body {
-            background: var(--bg);
-            color: #fff;
-            font-family: 'Inter', system-ui, sans-serif;
             margin: 0;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #020408;
+            /* Твій фірмовий в'язкий градієнт */
+            background-image: radial-gradient(
+                circle 1000px at var(--mouse-x) var(--mouse-y), 
+                #0a192f 0%, 
+                #020408 100%
+            );
+            color: #fff;
+            font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 60px 20px;
-            overflow-x: hidden;
+            justify-content: center;
         }
 
-        /* М'який живий фон */
-        .liquid-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -2;
-            background: linear-gradient(125deg, #030508, #08101d, #030508);
-            background-size: 400% 400%;
-            animation: moveBg 15s ease infinite;
-        }
-        @keyframes moveBg { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-
-        /* Правильний ліхтарик з лагом */
-        #flashlight {
-            position: fixed;
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(88, 166, 255, 0.1) 0%, transparent 70%);
+        /* Ефект Glow на фоні */
+        .glow {
+            position: absolute;
+            width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.05) 0%, transparent 70%);
             border-radius: 50%;
-            pointer-events: none;
+            filter: blur(80px);
             z-index: -1;
-            will-change: transform;
-            left: 0; top: 0;
+            pointer-events: none;
         }
 
         h1 {
-            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-size: 3.5rem;
             font-weight: 900;
-            letter-spacing: -2px;
-            margin: 0;
-            cursor: pointer; /* Для виклику дебагу */
-            background: linear-gradient(#fff, #555);
+            letter-spacing: -3px;
+            margin-bottom: 40px;
+            background: linear-gradient(to bottom, #fff, #444);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -61,163 +56,148 @@
         .container {
             display: flex;
             gap: 30px;
-            margin-top: 40px;
-            width: 100%;
-            max-width: 900px;
-            flex-wrap: wrap;
+            z-index: 10;
         }
 
-        .panel {
-            flex: 1;
-            min-width: 320px;
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 32px;
+        /* Скляні панелі з твого прикладу (Floater style) */
+        .glass-panel {
+            width: 340px;
+            min-height: 400px;
+            background: var(--glass);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid var(--border);
+            border-radius: 40px;
             padding: 35px;
-            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            /* Анімація левітації додається через JS */
         }
-
-        .panel:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.04); }
 
         .label {
-            font-size: 0.75rem;
-            font-weight: 900;
+            font-size: 0.7rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 3px;
             margin-bottom: 25px;
+            color: var(--accent);
             display: flex;
             align-items: center; gap: 10px;
         }
-        .done .label { color: var(--done); }
-        .beta .label { color: var(--beta); }
 
-        .card {
+        .label::before {
+            content: ''; width: 6px; height: 6px; 
+            background: var(--accent); border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Стильні картки ігор */
+        .game-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: rgba(255, 255, 255, 0.03);
-            padding: 20px 24px;
-            border-radius: 18px;
+            padding: 20px 25px;
+            border-radius: 20px;
             color: #fff;
             text-decoration: none;
             margin-bottom: 12px;
             border: 1px solid transparent;
-            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .card:hover {
+        .game-card:hover {
             background: rgba(255, 255, 255, 0.1);
-            transform: translateX(10px) scale(1.02);
-            border-color: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05) translateX(10px);
+            border-color: rgba(255,255,255,0.1);
         }
 
-        .debug-log {
-            position: fixed;
-            bottom: 20px; left: 20px;
-            background: rgba(0,0,0,0.8);
-            color: #ff7b72;
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            display: none;
-            z-index: 100;
-        }
+        .game-card b { font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-    <div class="liquid-bg"></div>
-    <div id="flashlight"></div>
+    <div class="glow" id="g1"></div>
 
-    <h1 onclick="toggleDebug()">GAMES DEMO</h1>
-    <p id="status-msg" style="opacity: 0.3; font-size: 0.8rem; letter-spacing: 1px;">INITIALIZING SYSTEM...</p>
+    <h1>GAMES DEMO</h1>
 
     <div class="container">
-        <div class="panel done">
-            <div class="label">● Stable</div>
+        <div class="glass-panel" id="panel-stable">
+            <div class="label">Production</div>
             <div id="done-list"></div>
         </div>
-        <div class="panel beta">
-            <div class="label">● Experimental</div>
+
+        <div class="glass-panel" id="panel-beta">
+            <div class="label">Testing</div>
             <div id="beta-list"></div>
         </div>
     </div>
 
-    <div id="debug" class="debug-log"></div>
-
     <script>
-        const API = { user: 'kivsjak', repo: 'srhiiy-efimtsev' };
-        const light = document.getElementById('flashlight');
-        const debugBox = document.getElementById('debug');
-        
-        // --- LOGIC: FLASHLIGHT INPUT LAG ---
-        let mouseX = 0, mouseY = 0;
-        let lightX = 0, lightY = 0;
+        // 1. В'язка мишка (Extreme Lag)
+        let targetX = 50, targetY = 50;
+        let currentX = 50, currentY = 50;
 
-        document.addEventListener('mousemove', e => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+        document.addEventListener('mousemove', (e) => {
+            targetX = (e.clientX / window.innerWidth) * 100;
+            targetY = (e.clientY / window.innerHeight) * 100;
         });
 
-        function animateLight() {
-            // Lerp: плавність (0.05 - більше лагу, 0.2 - менше)
-            lightX += (mouseX - lightX) * 0.1;
-            lightY += (mouseY - lightY) * 0.1;
-            
-            light.style.transform = `translate(${lightX - 300}px, ${lightY - 300}px)`;
-            requestAnimationFrame(animateLight);
-        }
-        animateLight();
-
-        // --- LOGIC: FETCH & SORT ---
-        async function loadData() {
-            try {
-                log("Fetching API...");
-                const res = await fetch(`https://api.github.com/repos/${API.user}/${API.repo}/contents/?t=${Date.now()}`);
-                
-                if (!res.ok) throw new Error(`GitHub Error: ${res.status}`);
-                
-                const files = await res.json();
-                log(`Found ${files.length} items`);
-
-                const dList = document.getElementById('done-list');
-                const bList = document.getElementById('beta-list');
-                dList.innerHTML = bList.innerHTML = '';
-
-                files.forEach(f => {
-                    const n = f.name.toUpperCase();
-                    if (n.endsWith('.HTML') && n !== 'INDEX.HTML') {
-                        const target = n.includes('DONE') ? dList : (n.includes('BETA') ? bList : null);
-                        if (target) {
-                            const a = document.createElement('a');
-                            a.className = 'card';
-                            a.href = f.name;
-                            a.target = '_blank';
-                            a.innerHTML = `<b>${f.name.split('.')[0]}</b><span style="opacity:0.4">PLAY →</span>`;
-                            target.appendChild(a);
-                        }
-                    }
-                });
-                
-                document.getElementById('status-msg').innerText = "SYSTEM ONLINE";
-            } catch (e) {
-                log("FATAL: " + e.message);
-                document.getElementById('status-msg').innerText = "CONNECTION ERROR";
+        // 2. Левітація (Floater class з твого Ludo)
+        class Floater {
+            constructor(id, range) {
+                this.el = document.getElementById(id);
+                this.range = range;
+                this.angleX = Math.random() * Math.PI * 2;
+                this.angleY = Math.random() * Math.PI * 2;
+                this.speed = 0.005 + Math.random() * 0.01;
+            }
+            update() {
+                this.angleX += this.speed;
+                this.angleY += this.speed;
+                const x = Math.sin(this.angleX) * this.range;
+                const y = Math.cos(this.angleY) * this.range;
+                this.el.style.transform = `translate(${x}px, ${y}px)`;
             }
         }
 
-        function log(msg) {
-            debugBox.innerHTML += `> ${msg}<br>`;
-            console.log(msg);
-        }
+        const floaters = [
+            new Floater('panel-stable', 3),
+            new Floater('panel-beta', 4)
+        ];
 
-        function toggleDebug() {
-            debugBox.style.display = debugBox.style.display === 'block' ? 'none' : 'block';
-        }
+        function animate() {
+            // В'язкість градієнта (0.01 - дуже повільно)
+            currentX += (targetX - currentX) * 0.02;
+            currentY += (targetY - currentY) * 0.02;
+            document.body.style.setProperty('--mouse-x', `${currentX}%`);
+            document.body.style.setProperty('--mouse-y', `${currentY}%`);
 
-        loadData();
+            floaters.forEach(f => f.update());
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 3. Завантаження ігор
+        async function load() {
+            const res = await fetch(`https://api.github.com/repos/kivsjak/srhiiy-efimtsev/contents/`);
+            const files = await res.json();
+            const dList = document.getElementById('done-list');
+            const bList = document.getElementById('beta-list');
+
+            files.forEach(f => {
+                const n = f.name.toUpperCase();
+                if (n.endsWith('.HTML') && n !== 'INDEX.HTML') {
+                    const target = n.includes('DONE') ? dList : bList;
+                    const card = document.createElement('a');
+                    card.className = 'game-card';
+                    card.href = f.name;
+                    card.target = '_blank';
+                    card.innerHTML = `<b>${f.name.split('.')[0]}</b><span>→</span>`;
+                    target.appendChild(card);
+                }
+            });
+        }
+        load();
     </script>
 </body>
 </html>
