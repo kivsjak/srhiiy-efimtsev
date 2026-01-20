@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -552,8 +552,7 @@
                     if (target) {
                         const a = document.createElement('a');
                         a.className = 'game-card';
-                        // Додаємо timestamp до URL гри для запобігання кешуванню
-                        a.href = `${f.name}?v=${VERSION}`;
+                        a.href = f.name;
                         a.target = '_blank';
                         a.rel = 'noopener noreferrer';
                         
