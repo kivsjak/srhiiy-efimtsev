@@ -3,35 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Game Hub</title>
+    <title>Smart Games Hub</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-        h1 { background: linear-gradient(90deg, #58a6ff, #bc8cff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem; }
-        .container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
-        .section { background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; width: 320px; min-height: 200px; }
-        .title { font-weight: bold; border-bottom: 2px solid #30363d; padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { background: linear-gradient(90deg, #58a6ff, #bc8cff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem; margin-bottom: 5px; }
+        .container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; margin-top: 30px; }
+        .section { background: #161b22; padding: 25px; border-radius: 15px; border: 1px solid #30363d; width: 320px; min-height: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .title { font-weight: bold; border-bottom: 2px solid #30363d; padding-bottom: 12px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
         .done .title { color: #2ea043; border-color: #2ea043; }
         .beta .title { color: #f2cc60; border-color: #f2cc60; }
-        a { display: block; background: #21262d; color: #fff; padding: 12px; margin-bottom: 8px; border-radius: 6px; text-decoration: none; border: 1px solid transparent; transition: 0.2s; }
-        a:hover { background: #30363d; transform: translateX(5px); border-color: #8b949e; }
-        .error { color: #ff7b72; background: #3a1d1d; padding: 10px; border-radius: 6px; font-size: 0.9rem; }
-        .empty { color: #8b949e; font-style: italic; font-size: 0.9rem; }
+        a { display: block; background: #21262d; color: #fff; padding: 14px; margin-bottom: 10px; border-radius: 8px; text-decoration: none; border: 1px solid transparent; transition: 0.3s; position: relative; }
+        a:hover { background: #30363d; transform: translateY(-3px); border-color: #8b949e; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        a::after { content: "↗"; position: absolute; right: 15px; opacity: 0.5; }
+        .empty { color: #8b949e; font-style: italic; font-size: 0.9rem; text-align: center; margin-top: 20px; }
+        .error { color: #ff7b72; background: #3a1d1d; padding: 15px; border-radius: 8px; font-size: 0.9rem; border: 1px solid #ff7b72; }
     </style>
 </head>
 <body>
 
-    <h1>🎮 INTERNAL GAME HUB</h1>
-    <p>Файли сортуються автоматично за назвою</p>
+    <h1>🎮 GAMES HUB</h1>
+    <p style="opacity: 0.7">Автоматичне сортування за назвою файлу</p>
 
     <div class="container">
         <div class="section done">
             <div class="title">✅ Release Ready</div>
-            <div id="done-list"><div class="empty">Пошук...</div></div>
+            <div id="done-list"><div class="empty">Шукаю файли...</div></div>
         </div>
 
         <div class="section beta">
             <div class="title">🚧 Beta Testing</div>
-            <div id="beta-list"><div class="empty">Пошук...</div></div>
+            <div id="beta-list"><div class="empty">Шу aю файли...</div></div>
         </div>
     </div>
 
@@ -43,17 +44,16 @@
             const doneBox = document.getElementById('done-list');
             const betaBox = document.getElementById('beta-list');
             
-            // Запит до КОРЕНЯ репозиторію
+            // Запит до КОРЕНЯ репозиторію (де лежать всі файли)
             const url = `https://api.github.com/repos/${USER}/${REPO}/contents/`;
 
             try {
                 const response = await fetch(url);
-                if (response.status === 403) throw new Error("Ліміт запитів GitHub вичерпано. Спробуй через годину.");
-                if (!response.ok) throw new Error("Не вдалося отримати список файлів.");
+                if (response.status === 403) throw new Error("Ліміт GitHub вичерпано. Спробуй через годину.");
+                if (!response.ok) throw new Error("Не вдалося завантажити список.");
 
                 const files = await response.json();
                 
-                // Очищуємо списки
                 doneBox.innerHTML = '';
                 betaBox.innerHTML = '';
 
@@ -61,29 +61,29 @@
                 let betaCount = 0;
 
                 files.forEach(file => {
-                    const name = file.name.toLowerCase();
+                    const fileName = file.name.toUpperCase();
                     
-                    // Перевіряємо, чи це HTML файл
-                    if (name.endsWith('.html') && name !== 'index.html') {
+                    // Ігноруємо сам index.html та не-HTML файли
+                    if (fileName.endsWith('.HTML') && fileName !== 'INDEX.HTML') {
                         
                         const link = document.createElement('a');
-                        link.href = file.name; // Файл лежить в корені, тому просто ім'я
-                        link.target = "_blank";
+                        link.href = file.name; 
+                        link.target = "_blank"; // Відкрити в новій вкладці
                         link.innerText = file.name.replace(/\.html$/i, '');
 
-                        // Сортування за ключовим словом у НАЗВІ ФАЙЛУ
-                        if (name.includes('done')) {
+                        // Перевіряємо, що написано в назві самого файлу
+                        if (fileName.includes('DONE')) {
                             doneBox.appendChild(link);
                             doneCount++;
-                        } else if (name.includes('beta')) {
+                        } else if (fileName.includes('BETA')) {
                             betaBox.appendChild(link);
                             betaCount++;
                         }
                     }
                 });
 
-                if (doneCount === 0) doneBox.innerHTML = '<div class="empty">Немає файлів з "done"</div>';
-                if (betaCount === 0) betaBox.innerHTML = '<div class="empty">Немає файлів з "beta"</div>';
+                if (doneCount === 0) doneBox.innerHTML = '<div class="empty">Файлів з "DONE" не знайдено</div>';
+                if (betaCount === 0) betaBox.innerHTML = '<div class="empty">Файлів з "BETA" не знайдено</div>';
 
             } catch (err) {
                 doneBox.innerHTML = betaBox.innerHTML = `<div class="error">${err.message}</div>`;
