@@ -50,10 +50,7 @@
             letter-spacing: 1px;
         }
 
-        /* Колір заголовка для готових ігор */
         .done-title { color: #2ea043; border-color: #2ea043; }
-        
-        /* Колір заголовка для бета тестів */
         .beta-title { color: #f2cc60; border-color: #f2cc60; }
 
         a {
@@ -66,3 +63,73 @@
             border-radius: 6px;
             transition: all 0.2s ease;
             border-left: 4px solid transparent;
+            position: relative; /* Для іконки стрілочки */
+        }
+
+        a:hover {
+            background: #30363d;
+            transform: translateX(5px);
+        }
+
+        .done-list a:hover { border-left-color: #2ea043; }
+        .beta-list a:hover { border-left-color: #f2cc60; }
+
+        .status {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            float: right;
+        }
+
+        /* Іконка зовнішнього посилання */
+        a::after {
+            content: "↗"; 
+            position: absolute;
+            right: -20px;
+            top: 12px;
+            opacity: 0;
+            transition: 0.2s;
+            color: #8b949e;
+        }
+        
+        a:hover::after {
+            opacity: 1;
+            right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>GAMES LIBRARY</h1>
+    <p>Внутрішній хаб тестування</p>
+
+    <div class="container">
+        
+        <div class="section">
+            <div class="section-title done-title">✅ Release Ready</div>
+            <div class="done-list">
+                <a href="done/GOLF_DONE.HTML" target="_blank">
+                    ⛳ Golf Demo
+                    <span class="status">v1.0</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title beta-title">🚧 Beta Testing</div>
+            <div class="beta-list">
+                <a href="beta/ANTS_BETA_1.html" target="_blank">
+                    🐜 Ants vs Plants
+                    <span class="status">Beta 1</span>
+                </a>
+                
+                <a href="beta/moon_beta_11.html" target="_blank">
+                    🌑 Moon Project
+                    <span class="status">Build 11</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
