@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Повне блокування кешу -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <title>Games Demo | Liquid Glass Elite</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,7 +54,6 @@
             opacity: 0.15;
             pointer-events: none;
             z-index: 0;
-            will-change: filter;
         }
         .gs1 { 
             top: 5%; 
@@ -436,17 +441,27 @@
     <script>
         'use strict';
         
+        // Генеруємо унікальний timestamp для кожного завантаження
+        const VERSION = Date.now();
+        
         let tx = window.innerWidth / 2, ty = window.innerHeight / 2;
         let cx = tx, cy = ty;
 
         const isMobile = window.innerWidth <= 600;
         let rafId = null;
+        let lastMouseUpdate = 0;
+        let lastFloaterUpdate = 0;
 
         // Тільки на десктопі відслідковуємо мишу та floater
         if (!isMobile) {
+            // Throttled mouse tracking - оновлюємо раз на 50ms
             document.addEventListener('mousemove', (e) => {
-                tx = e.clientX; 
-                ty = e.clientY;
+                const now = Date.now();
+                if (now - lastMouseUpdate > 50) {
+                    tx = e.clientX; 
+                    ty = e.clientY;
+                    lastMouseUpdate = now;
+                }
             }, { passive: true });
 
             // Floater тільки для десктопу
@@ -470,13 +485,21 @@
             const panelFloat = new Floater(wrapper, 1.5);
 
             function animate() {
+                const now = Date.now();
+                
+                // Mouse gradient - оновлюємо кожен кадр але з smooth interpolation
                 cx += (tx - cx) * 0.01; 
                 cy += (ty - cy) * 0.01;
                 
                 document.body.style.setProperty('--mouse-x', `${(cx / window.innerWidth * 100)}%`);
                 document.body.style.setProperty('--mouse-y', `${(cy / window.innerHeight * 100)}%`);
                 
-                panelFloat.update();
+                // Floater - оновлюємо тільки ~30fps (раз на 33ms)
+                if (now - lastFloaterUpdate > 33) {
+                    panelFloat.update();
+                    lastFloaterUpdate = now;
+                }
+                
                 rafId = requestAnimationFrame(animate);
             }
             animate();
@@ -498,7 +521,13 @@
 
         async function load() {
             try {
-                const res = await fetch(`https://api.github.com/repos/kivsjak/srhiiy-efimtsev/contents/?t=${Date.now()}`);
+                // Додаємо timestamp до запиту для запобігання кешуванню
+                const res = await fetch(`https://api.github.com/repos/kivsjak/srhiiy-efimtsev/contents/?v=${VERSION}`, {
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache'
+                    }
+                });
                 
                 if (!res.ok) throw new Error('Failed to fetch');
                 
@@ -523,7 +552,8 @@
                     if (target) {
                         const a = document.createElement('a');
                         a.className = 'game-card';
-                        a.href = f.name;
+                        // Додаємо timestamp до URL гри для запобігання кешуванню
+                        a.href = `${f.name}?v=${VERSION}`;
                         a.target = '_blank';
                         a.rel = 'noopener noreferrer';
                         
