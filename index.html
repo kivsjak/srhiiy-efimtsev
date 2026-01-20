@@ -3,144 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Game Hub</title>
+    <title>Game Hub (Diagnostic)</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0d1117;
-            color: #c9d1d9;
-            margin: 0;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #58a6ff, #bc8cff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .container {
-            display: flex;
-            gap: 40px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .section {
-            background: #161b22;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-            width: 300px;
-            min-height: 100px;
-        }
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #30363d;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .done-title { color: #2ea043; border-color: #2ea043; }
-        .beta-title { color: #f2cc60; border-color: #f2cc60; }
-        
-        a {
-            display: block;
-            background: #21262d;
-            color: #e6edf3;
-            text-decoration: none;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            border-left: 4px solid transparent;
-            word-break: break-all;
-        }
-        a:hover { background: #30363d; transform: translateX(5px); }
-        .done-list a:hover { border-left-color: #2ea043; }
-        .beta-list a:hover { border-left-color: #f2cc60; }
-        
-        .loading { color: #8b949e; font-style: italic; font-size: 0.9rem; }
+        body { font-family: monospace; background: #0d1117; color: #c9d1d9; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: #58a6ff; margin-bottom: 30px; }
+        .container { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
+        .section { background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; width: 300px; min-height: 150px; }
+        .title { font-weight: bold; border-bottom: 2px solid #30363d; padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; }
+        .done .title { color: #2ea043; border-color: #2ea043; }
+        .beta .title { color: #f2cc60; border-color: #f2cc60; }
+        a { display: block; background: #21262d; color: #fff; padding: 10px; margin-bottom: 8px; border-radius: 6px; text-decoration: none; }
+        a:hover { background: #1f6feb; }
+        .error { color: #ff7b72; font-size: 0.8em; border: 1px solid #ff7b72; padding: 10px; border-radius: 6px; background: #3a1d1d; }
+        .empty { color: #8b949e; font-style: italic; }
     </style>
 </head>
 <body>
 
-    <h1>GAMES LIBRARY</h1>
-    <p>Автоматичний список білдів</p>
+    <h1>🔍 GAMES HUB</h1>
 
     <div class="container">
-        
-        <div class="section">
-            <div class="section-title done-title">✅ Release Ready</div>
-            <div id="done-list" class="done-list">
-                <div class="loading">Сканую папку done...</div>
-            </div>
+        <div class="section done">
+            <div class="title">✅ Release Ready</div>
+            <div id="done-list">Scanning...</div>
         </div>
 
-        <div class="section">
-            <div class="section-title beta-title">🚧 Beta Testing</div>
-            <div id="beta-list" class="beta-list">
-                <div class="loading">Сканую папку beta...</div>
-            </div>
+        <div class="section beta">
+            <div class="title">🚧 Beta Testing</div>
+            <div id="beta-list">Scanning...</div>
         </div>
-
     </div>
 
     <script>
         // --- НАЛАШТУВАННЯ ---
-        const USERNAME = 'kivsjak';         
-        const REPO_NAME = 'srhiiy-efimtsev'; 
+        const USER = 'kivsjak';         
+        const REPO = 'srhiiy-efimtsev'; 
+        const BRANCH = 'main'; // <--- ПЕРЕВІР, ЯКЩО НЕ ПРАЦЮЄ, СПРОБУЙ 'master'
         // --------------------
 
-        async function fetchGames(folder, elementId) {
-            const container = document.getElementById(elementId);
-            const apiUrl = `https://api.github.com/repos/${USERNAME}/${REPO_NAME}/contents/${folder}`;
+        async function loadGames(folder, elementId) {
+            const box = document.getElementById(elementId);
+            // Додаємо ?ref=${BRANCH}, щоб точно шукати в правильній гілці
+            const url = `https://api.github.com/repos/${USER}/${REPO}/contents/${folder}?ref=${BRANCH}`;
 
             try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                     // Якщо папка ще не створилась (404 від API)
-                     if(response.status === 404) {
-                        throw new Error(`Папка ${folder} ще не знайдена (почекай деплой)`);
-                     }
-                     throw new Error('Помилка доступу');
+                const response = await fetch(url);
+
+                // ОБРОБКА ПОМИЛОК
+                if (response.status === 403) {
+                    throw new Error("⛔ ЛІМІТ ВИЧЕРПАНО. GitHub заблокував оновлення на 1 годину. Почекай або зміни Wi-Fi.");
                 }
-                
+                if (response.status === 404) {
+                    throw new Error(`⚠️ Папка '${folder}' не знайдена. Перевір регістр (Beta vs beta) або чи вона існує.`);
+                }
+                if (!response.ok) {
+                    throw new Error(`Помилка: ${response.status}`);
+                }
+
                 const data = await response.json();
-                container.innerHTML = ''; 
+                const games = data.filter(file => file.name.toUpperCase().endsWith('.HTML'));
 
-                const htmlFiles = data.filter(file => file.name.toUpperCase().endsWith('.HTML'));
+                box.innerHTML = ''; // Очистка
 
-                if (htmlFiles.length === 0) {
-                    container.innerHTML = '<div class="loading">Немає HTML файлів</div>';
+                if (games.length === 0) {
+                    box.innerHTML = '<div class="empty">Тут пусто (але папка є)</div>';
                     return;
                 }
 
-                htmlFiles.forEach(file => {
+                games.forEach(file => {
                     const link = document.createElement('a');
-                    
-                    // МАГІЯ ТУТ: encodeURIComponent лікує пробіли та спецсимволи
-                    // Ми жорстко задаємо шлях: папка + / + ім'я файлу
-                    link.href = folder + '/' + encodeURIComponent(file.name);
-                    
-                    link.target = "_blank"; 
-                    link.innerText = file.name.replace(/\.html$/i, ''); 
-                    container.appendChild(link);
+                    link.href = `${folder}/${file.name}`; // Простий шлях
+                    link.target = "_blank";
+                    link.innerText = file.name.replace(/\.html$/i, '');
+                    box.appendChild(link);
                 });
 
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = `<div class="loading">${error.message}</div>`;
+            } catch (err) {
+                console.error(err);
+                box.innerHTML = `<div class="error">${err.message}</div>`;
             }
         }
 
-        fetchGames('done', 'done-list');
-        fetchGames('beta', 'beta-list');
+        loadGames('done', 'done-list');
+        loadGames('beta', 'beta-list');
     </script>
 
 </body>
