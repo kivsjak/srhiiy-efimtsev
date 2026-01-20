@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -555,16 +555,8 @@
                         a.href = f.name;
                         a.target = '_blank';
                         a.rel = 'noopener noreferrer';
+                        a.innerHTML = `<b>${f.name.split('.')[0]}</b><i>RUN →</i>`;
                         
-                        const gameName = f.name.split('.')[0];
-                        const nameEl = document.createElement('b');
-                        nameEl.textContent = gameName;
-                        
-                        const btnEl = document.createElement('i');
-                        btnEl.textContent = 'RUN →';
-                        
-                        a.appendChild(nameEl);
-                        a.appendChild(btnEl);
                         target.appendChild(a);
 
                         // Анімація появи з затримкою
