@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WindowGlass Hub | Optimized</title>
+    <title>WindowGlass Hub | Stable v3</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -19,10 +19,9 @@
             overflow: hidden;
             width: 100vw; height: 100vh;
             display: flex; justify-content: center; align-items: center;
-            background: #05070a; /* Базовий колір для швидкості */
-            background-image: linear-gradient(135deg, #0f0f0f, #05070a, #010204);
-            background-size: 200% 200%; /* Менший розмір — легша анімація */
-            animation: deepFlow 20s ease infinite;
+            background: linear-gradient(135deg, #0f0f0f, #05070a, #010204);
+            background-size: 400% 400%;
+            animation: deepFlow 30s ease infinite;
         }
 
         @keyframes deepFlow {
@@ -41,7 +40,6 @@
             );
             z-index: -1;
             pointer-events: none;
-            will-change: background; /* Оптимізація GPU */
         }
 
         #main-container {
@@ -52,25 +50,27 @@
             background: var(--bg-tint);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
+            /* Windhawk Border System */
             border-top: 1.2px solid rgba(255, 255, 255, 0.25);
             border-left: 1.2px solid rgba(255, 255, 255, 0.1);
             border-right: 1.2px solid rgba(0, 0, 0, 0.2);
             border-bottom: 1px solid rgba(0, 0, 0, 0.4);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            will-change: transform; /* Оптимізація GPU */
-            contain: content; /* Не дає ефектам виходити за межі */
         }
 
-        .panel { width: 300px; padding: 10px; }
+        .panel { 
+            width: 300px; 
+            padding: 10px;
+        }
 
+        /* Обмежуємо висоту для запобігання вильоту за екран */
         .list-container {
             max-height: 60vh;
             overflow-y: auto;
             padding-right: 5px;
-            scrollbar-width: thin; /* Для Firefox */
-            scrollbar-color: rgba(255,255,255,0.1) transparent;
         }
 
+        /* Стильний прихований скролбар */
         .list-container::-webkit-scrollbar { width: 4px; }
         .list-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
@@ -86,10 +86,10 @@
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.04);
-            padding: 16px 20px; border-radius: 16px;
+            padding: 18px 22px; border-radius: 18px;
             color: var(--text-muted); text-decoration: none;
             margin-bottom: 12px;
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s ease;
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .game-card:hover {
@@ -99,7 +99,7 @@
             border-color: rgba(255, 255, 255, 0.15);
         }
 
-        .game-card b { font-size: 0.9rem; font-weight: 600; }
+        .game-card b { font-size: 0.95rem; font-weight: 600; }
         .game-card i { font-style: normal; font-size: 10px; opacity: 0.3; font-weight: 800; }
     </style>
 </head>
@@ -121,21 +121,16 @@
 </div>
 
 <script>
-    // Використання швидких посилань на DOM
-    const bodyStyle = document.body.style;
-    const dList = document.getElementById('done-list');
-    const bList = document.getElementById('beta-list');
-    const container = document.getElementById('main-container');
-
-    let targetX = window.innerWidth >> 1, targetY = window.innerHeight >> 1;
+    // Ініціалізація по центру, щоб не було багу з (0,0)
+    let targetX = innerWidth / 2, targetY = innerHeight / 2;
     let currentX = targetX, currentY = targetY;
 
-    // Оптимізований слухач миші
     document.addEventListener('mousemove', (e) => {
         targetX = e.clientX;
         targetY = e.clientY;
-    }, { passive: true });
+    });
 
+    // Оптимізований Floater (плавання)
     class Floater {
         constructor(el, range) {
             this.el = el;
@@ -144,23 +139,27 @@
             this.angleY = Math.random() * 6;
         }
         update() {
-            this.angleX += 0.005;
-            this.angleY += 0.004;
+            this.angleX += 0.006;
+            this.angleY += 0.005;
             const x = Math.sin(this.angleX) * this.range;
             const y = Math.cos(this.angleY) * this.range;
-            this.el.style.transform = `translate3d(${x}px, ${y}px, 0)`; // translate3d краще для GPU
+            this.el.style.transform = `translate(${x}px, ${y}px)`;
         }
     }
 
-    const panelFloat = new Floater(container, 0.7);
+    const container = document.getElementById('main-container');
+    const panelFloat = new Floater(container, 0.8);
 
     function animate() {
-        // В'язкість через лінійну інтерполяцію (Lerp)
-        currentX += (targetX - currentX) * 0.008; 
-        currentY += (targetY - currentY) * 0.008;
+        // В'язкість ліхтарика
+        currentX += (targetX - currentX) * 0.009; 
+        currentY += (targetY - currentY) * 0.009;
         
-        bodyStyle.setProperty('--mouse-x', `${(currentX / window.innerWidth * 100).toFixed(2)}%`);
-        bodyStyle.setProperty('--mouse-y', `${(currentY / window.innerHeight * 100).toFixed(2)}%`);
+        const px = (currentX / innerWidth) * 100;
+        const py = (currentY / innerHeight) * 100;
+        
+        document.body.style.setProperty('--mouse-x', `${px}%`);
+        document.body.style.setProperty('--mouse-y', `${py}%`);
         
         panelFloat.update();
         requestAnimationFrame(animate);
@@ -168,36 +167,32 @@
     animate();
 
     async function load() {
+        const dList = document.getElementById('done-list');
+        const bList = document.getElementById('beta-list');
+        dList.innerHTML = bList.innerHTML = ""; // Чистка перед завантаженням
+        
         try {
             const res = await fetch(`https://api.github.com/repos/kivsjak/srhiiy-efimtsev/contents/?t=${Date.now()}`);
-            if (!res.ok) return;
+            if (!res.ok) throw new Error();
             const files = await res.json();
-            
-            // Використання DocumentFragment для зменшення Reflow
-            const fragmentDone = document.createDocumentFragment();
-            const fragmentBeta = document.createDocumentFragment();
 
             files.forEach(f => {
                 const n = f.name.toUpperCase();
                 if (n.endsWith('.HTML') && n !== 'INDEX.HTML') {
-                    const isDone = n.includes('DONE');
-                    const isBeta = n.includes('BETA');
-                    if (!isDone && !isBeta) return;
-
-                    const a = document.createElement('a');
-                    a.className = 'game-card';
-                    a.href = f.name;
-                    a.target = '_blank';
-                    a.innerHTML = `<b>${f.name.split('.')[0]}</b><i>EXE</i>`;
-                    
-                    if (isDone) fragmentDone.appendChild(a);
-                    else fragmentBeta.appendChild(a);
+                    let target = n.includes('DONE') ? dList : (n.includes('BETA') ? bList : null);
+                    if (target) {
+                        const a = document.createElement('a');
+                        a.className = 'game-card';
+                        a.href = f.name;
+                        a.target = '_blank';
+                        a.innerHTML = `<b>${f.name.split('.')[0]}</b><i>EXE</i>`;
+                        target.appendChild(a);
+                    }
                 }
             });
-
-            dList.appendChild(fragmentDone);
-            bList.appendChild(fragmentBeta);
-        } catch(e) {}
+        } catch(e) {
+            dList.innerHTML = "<span style='opacity:0.2; font-size:12px;'>Sync Error.</span>";
+        }
     }
     load();
 </script>
