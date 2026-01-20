@@ -3,94 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Games Hub</title>
+    <title>Game Lab Hub</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-        h1 { background: linear-gradient(90deg, #58a6ff, #bc8cff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem; margin-bottom: 5px; }
-        .container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; margin-top: 30px; }
-        .section { background: #161b22; padding: 25px; border-radius: 15px; border: 1px solid #30363d; width: 320px; min-height: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .title { font-weight: bold; border-bottom: 2px solid #30363d; padding-bottom: 12px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-        .done .title { color: #2ea043; border-color: #2ea043; }
-        .beta .title { color: #f2cc60; border-color: #f2cc60; }
-        a { display: block; background: #21262d; color: #fff; padding: 14px; margin-bottom: 10px; border-radius: 8px; text-decoration: none; border: 1px solid transparent; transition: 0.3s; position: relative; }
-        a:hover { background: #30363d; transform: translateY(-3px); border-color: #8b949e; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        a::after { content: "↗"; position: absolute; right: 15px; opacity: 0.5; }
-        .empty { color: #8b949e; font-style: italic; font-size: 0.9rem; text-align: center; margin-top: 20px; }
-        .error { color: #ff7b72; background: #3a1d1d; padding: 15px; border-radius: 8px; font-size: 0.9rem; border: 1px solid #ff7b72; }
+        :root {
+            --bg: #05070a;
+            --card-bg: rgba(22, 27, 34, 0.7);
+            --accent-done: #2ea043;
+            --accent-beta: #f2cc60;
+            --text: #e6edf3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(88, 166, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(188, 140, 255, 0.05) 0%, transparent 40%);
+            color: var(--text);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(135deg, #58a6ff, #bc8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(88, 166, 255, 0.3));
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        p { opacity: 0.6; margin-bottom: 40px; animation: fadeIn 1.2s ease-in; }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 340px;
+            min-height: 300px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+            animation: slideUp 0.6s ease-out both;
+        }
+
+        .section:hover { transform: translateY(-5px); border-color: rgba(255, 255, 255, 0.2); }
+
+        .title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .done .title { color: var(--accent-done); text-shadow: 0 0 15px rgba(46, 160, 67, 0.4); }
+        .beta .title { color: var(--accent-beta); text-shadow: 0 0 15px rgba(242, 204, 96, 0.4); }
+
+        .game-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .game-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+            padding-left: 25px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .done .game-link:hover { border-left: 5px solid var(--accent-done); }
+        .beta .game-link:hover { border-left: 5px solid var(--accent-beta); }
+
+        .game-link b { font-size: 1.05rem; }
+        .game-link span { font-family: monospace; opacity: 0.4; font-size: 0.8rem; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .loader { border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid #58a6ff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <h1>🎮 GAMES HUB</h1>
-    <p style="opacity: 0.7">Автоматичне сортування за назвою файлу</p>
+    <h1>GAME LAB</h1>
+    <p>Internal mechanics testing facility</p>
 
     <div class="container">
-        <div class="section done">
-            <div class="title">✅ Release Ready</div>
-            <div id="done-list"><div class="empty">Шукаю файли...</div></div>
+        <div class="section done" style="animation-delay: 0.1s;">
+            <div class="title">● Done Builds</div>
+            <div id="done-list"><div class="loader"></div></div>
         </div>
 
-        <div class="section beta">
-            <div class="title">🚧 Beta Testing</div>
-            <div id="beta-list"><div class="empty">Шу aю файли...</div></div>
+        <div class="section beta" style="animation-delay: 0.2s;">
+            <div class="title">● Active Beta</div>
+            <div id="beta-list"><div class="loader"></div></div>
         </div>
     </div>
 
     <script>
-        const USER = 'kivsjak';         
-        const REPO = 'srhiiy-efimtsev'; 
+        const CONFIG = { user: 'kivsjak', repo: 'srhiiy-efimtsev' };
 
-        async function initHub() {
-            const doneBox = document.getElementById('done-list');
-            const betaBox = document.getElementById('beta-list');
-            
-            // Запит до КОРЕНЯ репозиторію (де лежать всі файли)
-            const url = `https://api.github.com/repos/${USER}/${REPO}/contents/`;
-
+        async function init() {
             try {
-                const response = await fetch(url);
-                if (response.status === 403) throw new Error("Ліміт GitHub вичерпано. Спробуй через годину.");
-                if (!response.ok) throw new Error("Не вдалося завантажити список.");
-
-                const files = await response.json();
+                const res = await fetch(`https://api.github.com/repos/${CONFIG.user}/${CONFIG.repo}/contents/`);
+                if (!res.ok) throw new Error();
+                const files = await res.json();
                 
-                doneBox.innerHTML = '';
-                betaBox.innerHTML = '';
+                const lists = { 
+                    done: document.getElementById('done-list'), 
+                    beta: document.getElementById('beta-list') 
+                };
+                lists.done.innerHTML = ''; lists.beta.innerHTML = '';
 
-                let doneCount = 0;
-                let betaCount = 0;
-
-                files.forEach(file => {
-                    const fileName = file.name.toUpperCase();
-                    
-                    // Ігноруємо сам index.html та не-HTML файли
-                    if (fileName.endsWith('.HTML') && fileName !== 'INDEX.HTML') {
-                        
-                        const link = document.createElement('a');
-                        link.href = file.name; 
-                        link.target = "_blank"; // Відкрити в новій вкладці
-                        link.innerText = file.name.replace(/\.html$/i, '');
-
-                        // Перевіряємо, що написано в назві самого файлу
-                        if (fileName.includes('DONE')) {
-                            doneBox.appendChild(link);
-                            doneCount++;
-                        } else if (fileName.includes('BETA')) {
-                            betaBox.appendChild(link);
-                            betaCount++;
+                files.forEach((file, index) => {
+                    const name = file.name.toUpperCase();
+                    if (name.endsWith('.HTML') && name !== 'INDEX.HTML') {
+                        const type = name.includes('DONE') ? 'done' : (name.includes('BETA') ? 'beta' : null);
+                        if (type) {
+                            const a = document.createElement('a');
+                            a.className = 'game-link';
+                            a.href = file.name;
+                            a.target = '_blank';
+                            a.style.animationDelay = `${(index * 0.1) + 0.4}s`;
+                            a.innerHTML = `<b>${file.name.split('.')[0]}</b><span>RUN →</span>`;
+                            lists[type].appendChild(a);
                         }
                     }
                 });
 
-                if (doneCount === 0) doneBox.innerHTML = '<div class="empty">Файлів з "DONE" не знайдено</div>';
-                if (betaCount === 0) betaBox.innerHTML = '<div class="empty">Файлів з "BETA" не знайдено</div>';
-
-            } catch (err) {
-                doneBox.innerHTML = betaBox.innerHTML = `<div class="error">${err.message}</div>`;
+                ['done', 'beta'].forEach(k => {
+                    if (lists[k].children.length === 0) lists[k].innerHTML = '<div style="opacity:0.3;text-align:center;margin-top:20px">No builds found</div>';
+                });
+            } catch (e) {
+                document.body.innerHTML += '<p style="color:red">Error loading files. Check connection.</p>';
             }
         }
-
-        initHub();
+        init();
     </script>
 </body>
 </html>
