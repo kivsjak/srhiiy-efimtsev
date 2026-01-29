@@ -511,8 +511,8 @@
 
         async function load() {
             try {
-                // Додаємо timestamp до запиту для запобігання кешуванню
-                const res = await fetch(`https://api.github.com/repos/kivsjak/srhiiy-efimtsev/contents/?v=${VERSION}`, {
+                // ВИПРАВЛЕНО: додано games_demo до шляху
+                const res = await fetch(`https://api.github.com/repos/kivsjak/srhiiy-efimtsev/contents/games_demo?v=${VERSION}`, {
                     headers: {
                         'Cache-Control': 'no-cache, no-store, must-revalidate',
                         'Pragma': 'no-cache'
@@ -525,6 +525,7 @@
                 }
                 
                 const files = await res.json();
+                console.log('Loaded files:', files); // Для дебагу
                 renderGames(files);
             } catch(e) {
                 console.error('Failed to load files:', e);
@@ -551,38 +552,4 @@
                     if (fileNameUpper.includes('DONE')) {
                         targetList = doneList; // Stable (зелена колонка)
                     } else if (fileNameUpper.includes('BETA')) {
-                        targetList = betaList; // Testing (помаранчева колонка)
-                    }
-                    
-                    // Якщо файл підходить під категорію - додаємо його
-                    if (targetList) {
-                        const card = document.createElement('a');
-                        card.className = 'game-card';
-                        card.href = fileName;
-                        card.target = '_blank';
-                        card.rel = 'noopener noreferrer';
-                        
-                        // Показуємо назву без розширення
-                        const displayName = fileName.replace('.html', '').replace('.HTML', '');
-                        card.innerHTML = `<b>${displayName}</b><i>RUN →</i>`;
-                        
-                        targetList.appendChild(card);
-
-                        // Анімація появи з затримкою
-                        setTimeout(() => card.classList.add('animate'), 500 + (cardIndex * 120));
-                        cardIndex++;
-                    }
-                }
-            });
-        }
-
-        // Cleanup при виході
-        window.addEventListener('beforeunload', () => {
-            if (rafId) cancelAnimationFrame(rafId);
-        });
-
-        // Завантажуємо ігри
-        load();
-    </script>
-</body>
-</html>
+                        targe
