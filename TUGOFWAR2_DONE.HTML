@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tug of War: Ultimate Celebration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* --- ОСНОВНІ НАЛАШТУВАННЯ --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        
+        body {
+            font-family: 'Montserrat', 'Segoe UI', sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        #game-container {
+            width: 1920px; height: 1080px;
+            position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%, -50%) scale(0.5); 
+            transform-origin: center center;
+            background: #000;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            overflow: hidden;
+            transition: filter 1s ease;
+        }
+
+        /* --- SHARED UI STYLE (GLASS WOOD) --- */
+        .ui-panel-glass {
+            background: rgba(40, 25, 15, 0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border-radius: 25px;
+            color: #fff;
+        }
+
+        /* SCOREBOARD WIDGET */
+        .scoreboard-container {
+            position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
+            width: 350px; height: 80px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px;
+            z-index: 400;
+        }
+        .side-stats { display: flex; flex-direction: column; align-items: center; width: 90px; }
+        .side-label {
+            background: rgba(255, 255, 255, 0.1); 
+            color: #ccc; font-weight: 800; font-size: 9px;
+            padding: 2px 8px; border-radius: 6px; margin-bottom: 2px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .side-icon { width: 24px; height: 24px; margin: 2px 0; }
+        .icon-helmet { width: 100%; height: 100%; fill: #ffd700; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .pop-count { font-size: 14px; font-weight: 900; color: #ffd700; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .match-score { font-size: 40px; font-weight: 900; color: #fff; text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2); font-family: 'Montserrat', sans-serif; margin: 0 10px; }
+
+        /* REGION WIDGET */
+        .top-region-widget { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 500; text-align: center; width: 350px; }
+        .region-label { font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
+        .region-box { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; width: 100%; }
+        .region-arrow { cursor: pointer; padding: 5px 10px; font-size: 18px; user-select: none; transition: all 0.2s; color: #888; }
+        .region-arrow:hover { color: #fff; transform: scale(1.2); }
+        #region-name { flex-grow: 1; text-align: center; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* BALANCE WIDGET */
+        .balance-widget { position: absolute; top: 30px; left: 40px; z-index: 100; padding: 10px 25px; display: flex; flex-direction: column; align-items: flex-start; min-width: 200px; }
+        .balance-label { font-size: 10px; color: #aaa; font-weight: 800; letter-spacing: 2px; margin-bottom: 2px; }
+        .balance-amount { font-size: 24px; color: #fff; font-weight: 900; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+        .balance-amount::before { content: '$'; color: #4caf50; margin-right: 2px; }
+
+        /* BOTTOM UI PANEL */
+        .bottom-ui-panel { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 600px; height: 380px; padding: 25px 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; z-index: 100; }
+        .section-label { font-size: 12px; font-weight: 800; color: #888; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; width: 100%; text-align: center; }
+        .bet-control-wrapper { display: flex; align-items: center; width: 100%; justify-content: center; gap: 15px; }
+        .bet-inner-box { background: rgba(0, 0, 0, 0.3); border-radius: 15px; padding: 5px; display: flex; align-items: center; justify-content: space-between; width: 320px; height: 60px; border: 1px solid rgba(255,255,255,0.05); }
+        .outer-action-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: bold; font-size: 24px; cursor: pointer; transition: background 0.2s; }
+        .outer-action-btn:hover { background: rgba(255, 255, 255, 0.15); }
+        .modifier-btn { background: rgba(255, 255, 255, 0.08); color: #ccc; border-radius: 12px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+        .modifier-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+        .bet-value-display { font-size: 28px; font-weight: 800; color: #fff; text-align: center; flex-grow: 1; }
+        .combo-container { display: flex; width: 100%; justify-content: space-between; background: rgba(0, 0, 0, 0.3); border-radius: 20px; padding: 5px; border: 1px solid rgba(255,255,255,0.05); }
+        .combo-option { flex: 1; text-align: center; padding: 10px 0; font-weight: 800; font-size: 16px; color: #888; cursor: pointer; z-index: 2; position: relative; transition: color 0.2s; }
+        .combo-option.active { color: #1a1a1a; background: #ffd700; border-radius: 15px; box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
+        .multipliers-container { display: flex; gap: 15px; width: 100%; justify-content: center; margin-top: 10px; }
+        .mult-btn { width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; color: white; cursor: pointer; position: relative; transition: transform 0.1s; text-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+        .mult-btn:active { transform: translateY(4px) !important; }
+        .mult-btn.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); }
+        .m-16 { background: linear-gradient(to bottom, #81c784, #558b2f); border: 2px solid #a5d6a7; box-shadow: 0 6px 0 #33691e; }
+        .m-32 { background: linear-gradient(to bottom, #4fc3f7, #0277bd); border: 2px solid #81d4fa; box-shadow: 0 6px 0 #01579b; }
+        .m-64 { background: linear-gradient(to bottom, #ff8a65, #d84315); border: 2px solid #ffab91; box-shadow: 0 6px 0 #bf360c; }
+        .m-100 { background: linear-gradient(to bottom, #ba68c8, #7b1fa2); border: 2px solid #ce93d8; box-shadow: 0 6px 0 #4a148c; }
+        .m-330 { background: linear-gradient(to bottom, #e57373, #c62828); border: 2px solid #ef9a9a; box-shadow: 0 6px 0 #b71c1c; }
+        @keyframes btnBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .btn-bounce { animation: btnBounce 0.3s ease-in-out; }
+
+        /* OVERLAYS & FX */
+        /* Flashbang overlay for win */
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 700; opacity: 0; pointer-events: none;
+            transition: opacity 0.1s ease-out;
+        }
+
+        #game-over-overlay, #win-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 600; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.8); /* Neutral dark background for both */
+        }
+        
+        #game-over-text, #win-text {
+            font-size: 100px; font-weight: 900; text-transform: uppercase; letter-spacing: 5px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            z-index: 602; position: relative;
+        }
+        #game-over-text { color: #eee; } 
+        #win-text { 
+            background: linear-gradient(to bottom, #ffd700, #ff8c00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.8));
+            animation: winTextPulse 0.5s infinite alternate;
+        }
+        @keyframes winTextPulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        /* FX Canvas ON TOP of Overlays for Fireworks */
+        #fx-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 601; pointer-events: none; }
+        #bg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+        .floating-text {
+            position: absolute; font-weight: 900; font-size: 60px; 
+            animation: floatUp 0.8s forwards ease-out; pointer-events: none; z-index: 300;
+            text-shadow: 3px 3px 0 #000, 0 0 20px rgba(0,0,0,0.5);
+            text-align: center; width: 100%; left: 0; 
+        }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(0.8); opacity: 0; } 20% { transform: translateY(-30px) scale(1.2); opacity: 1; } 100% { transform: translateY(-100px) scale(1); opacity: 0; } }
+
+        /* SCENE ELEMENTS */
+        .stage-floor { position: absolute; top: 660px; left: 0; width: 100%; height: 420px; background: radial-gradient(ellipse at center top, #5d4037 0%, #3e2723 60%, #1a1a1a 100%); border-top: 4px solid rgba(0,0,0,0.5); z-index: 1; overflow: hidden; }
+        .floor-planks { position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background: repeating-linear-gradient(90deg, rgba(0,0,0,0.3) 0, rgba(0,0,0,0.3) 2px, transparent 2px, transparent 100px); opacity: 0.6; transform-origin: top center; transform: rotateX(60deg); }
+        .hologram-floor-spot { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 380px; height: 100px; background: radial-gradient(ellipse at center, rgba(0, 255, 255, 0.6) 0%, transparent 70%); border-radius: 50%; filter: blur(20px); z-index: 1; pointer-events: none; }
+        .globe-container { position: absolute; top: 150px; left: 50%; transform: translateX(-50%); width: 380px; height: 380px; z-index: 2; }
+        .globe { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 40% 40%, rgba(200, 255, 255, 0.8) 0%, rgba(0, 190, 255, 0.6) 40%, rgba(0, 80, 180, 0.9) 100%); box-shadow: 0 0 30px #00ffff, 0 0 70px #00aaff, 0 0 120px rgba(0, 150, 255, 0.5), inset 0 0 60px rgba(255, 255, 255, 0.5); border: 4px solid rgba(150, 255, 255, 0.8); position: relative; overflow: hidden; z-index: 5; }
+        .globe::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.4) 1px, transparent 1px); background-size: 45px 45px; border-radius: 50%; box-shadow: inset 0 0 60px rgba(0,0,50,0.6); pointer-events: none; z-index: 5; mix-blend-mode: overlay; }
+        .globe::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 200%; background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(255, 255, 255, 0.3) 3px, rgba(0, 255, 255, 0.3) 4px); z-index: 6; pointer-events: none; animation: scanlineMove 6s linear infinite; }
+        @keyframes scanlineMove { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+        .map-strip { position: absolute; top: 0; left: 0; width: 700%; height: 100%; display: flex; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
+        .region-view { width: 380px; height: 380px; position: relative; display: flex; justify-content: center; align-items: center; }
+        .continent-svg { width: 80%; height: 80%; fill: rgba(220, 255, 255, 0.8); filter: drop-shadow(0 0 10px rgba(0,255,255,0.8)); opacity: 0.9; }
+        .hologram-beam { position: absolute; top: 240px; left: 50%; transform: translateX(-50%); width: 380px; height: 560px; background: linear-gradient(to bottom, rgba(0, 255, 255, 0.1) 0%, rgba(0, 255, 255, 0.25) 20%, rgba(0, 255, 255, 0.05) 80%, transparent 100%); border-left: 3px solid rgba(0, 255, 255, 0.4); border-right: 3px solid rgba(0, 255, 255, 0.4); box-shadow: inset 10px 0 20px rgba(0,255,255,0.1), inset -10px 0 20px rgba(0,255,255,0.1); filter: blur(2px); z-index: 1; pointer-events: none; }
+        #rope-canvas { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; z-index: 50; pointer-events: none; }
+        .nuke-container { position: absolute; bottom: 420px; z-index: 4; width: 140px; height: 450px; transform-origin: bottom center; }
+        .nuke-left { left: 150px; } .nuke-right { right: 150px; }
+        .nuke-body { position: absolute; bottom: 0; left: 20px; width: 100px; height: 320px; background: linear-gradient(90deg, #333, #666, #444); border-radius: 0 0 10px 10px; border-left: 1px solid rgba(255,255,255,0.1); }
+        .nuke-head { position: absolute; top: -80px; left: 0; width: 100%; height: 80px; background: linear-gradient(90deg, #800, #d00, #800); border-radius: 50% 50% 10% 10%; border-bottom: 5px solid #222; }
+        .nuke-fin { position: absolute; bottom: 0; width: 40px; height: 80px; background: #222; z-index: -1; }
+        .fin-l { left: -20px; border-radius: 10px 0 0 0; transform: skewY(20deg); }
+        .fin-r { right: -20px; border-radius: 0 10px 0 0; transform: skewY(-20deg); }
+        .rad-symbol { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: #d4ac0d; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; color: #000; font-weight: bold; }
+        .rad-symbol::after { content: '☢'; }
+
+        /* RIGGING */
+        .player-container { position: absolute; top: 500px; width: 100px; height: 160px; z-index: 10; transform-origin: bottom center; will-change: transform; }
+        #player-left { left: 420px; transform: scaleX(-1); } #player-right { right: 420px; } 
+        .body { position: absolute; width: 40px; height: 65px; left: 30px; top: 45px; z-index: 10; border-radius: 10px; transform-origin: bottom center; }
+        .head { position: absolute; width: 45px; height: 50px; left: -2.5px; top: -45px; z-index: 15; border-radius: 15px; transform-origin: bottom center; } 
+        .eye { position: absolute; top: 15px; width: 10px; height: 14px; background: #fff; border-radius: 50%; border: 1px solid rgba(0,0,0,0.3); overflow: visible; }
+        .eye::after { content: ''; position: absolute; top: 5px; width: 4px; height: 4px; background: #000; border-radius: 50%; }
+        .eye::before { content: ''; position: absolute; top: -3px; left: -2px; width: 140%; height: 6px; background: #000; border-radius: 2px; z-index: 5; }
+        #player-left .eye.l { left: 8px; } #player-left .eye.r { left: 26px; } #player-left .eye::after { right: 1px; } #player-left .eye.l::before { transform: rotate(15deg); } #player-left .eye.r::before { transform: rotate(-15deg); }
+        #player-right .eye.l { left: 8px; } #player-right .eye.r { left: 26px; } #player-right .eye::after { left: 1px; } #player-right .eye.l::before { transform: rotate(15deg); } #player-right .eye.r::before { transform: rotate(-15deg); }
+        .limb { position: absolute; width: 14px; background: inherit; border-radius: 10px; transform-origin: top center; }
+        .thigh { height: 40px; top: 95px; transform-origin: top center; }
+        .shin { height: 40px; top: 35px; width: 14px; border-radius: 8px; position: absolute; background: inherit; transform-origin: top center; }
+        .foot { position: absolute; bottom: -5px; left: -4px; width: 22px; height: 12px; background: #111; border-radius: 5px; }
+        .leg.l { left: 30px; z-index: 5; } .leg.r { left: 56px; z-index: 12; } 
+        .upper-arm { width: 12px; height: 30px; top: 5px; position: absolute; border-radius: 6px; transform-origin: top center; }
+        .forearm { width: 11px; height: 30px; top: 25px; left: 0; position: absolute; border-radius: 6px; transform-origin: top center; background: inherit; }
+        .hand { position: absolute; bottom: -5px; left: -2px; width: 16px; height: 16px; background: #e0ac69; border-radius: 50%; }
+        .arm.l { left: -5px; z-index: 5; } .arm.r { left: 35px; z-index: 13; } 
+        #player-left .body { background: #0d47a1; } #player-left .body::after { content: ''; position: absolute; top: 5px; left: 16px; width: 8px; height: 50px; background: #d32f2f; z-index: 11; } #player-left .body::before { content: ''; position: absolute; top: 0; left: 12px; width: 16px; height: 15px; background: white; z-index: 11; clip-path: polygon(0 0, 100% 0, 50% 100%); } #player-left .head { background: #ffcc80; } #player-left .head::after { content: ''; position: absolute; top: -5px; left: -5px; width: 55px; height: 20px; background: #ffd700; border-radius: 10px 20px 0 0; transform: rotate(-5deg); } #player-left .limb, #player-left .shin { background: #0d47a1; } #player-left .upper-arm, #player-left .forearm { background: #0d47a1; }
+        #player-right .body { background: #1a1a1a; } #player-right .body::before { content: ''; position: absolute; top: 0; left: 12px; width: 16px; height: 15px; background: white; z-index: 11; clip-path: polygon(0 0, 100% 0, 50% 100%); } #player-right .head { background: #f1c27d; } #player-right .head::after { content: ''; position: absolute; top: -2px; left: 0; width: 100%; height: 12px; background: #111; border-radius: 10px 10px 0 0; } #player-right .limb, #player-right .shin { background: #1a1a1a; } #player-right .upper-arm, #player-right .forearm { background: #1a1a1a; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <div id="flash-overlay"></div>
+
+        <!-- SCOREBOARD -->
+        <div class="scoreboard-container ui-panel-glass">
+            <div class="side-stats">
+                <div class="side-label">PLAYER</div>
+                <div class="side-icon">
+                    <svg class="icon-helmet" viewBox="0 0 100 100">
+                        <path d="M10,60 Q10,20 50,20 Q90,20 90,60 L90,70 Q90,80 80,80 L20,80 Q10,80 10,70 Z" fill="#ffd700" stroke="#b8860b" stroke-width="4"/>
+                        <path d="M10,65 L90,65" stroke="#b8860b" stroke-width="4"/>
+                    </svg>
+                </div>
+                <div id="pop-left" class="pop-count">200 000</div>
+            </div>
+            <div class="match-score">0 - 0</div>
+            <div class="side-stats">
+                <div class="side-label">ENEMY</div>
+                <div class="side-icon">
+                    <svg class="icon-helmet" viewBox="0 0 100 100">
+                        <path d="M10,60 Q10,20 50,20 Q90,20 90,60 L90,70 Q90,80 80,80 L20,80 Q10,80 10,70 Z" fill="#ffd700" stroke="#b8860b" stroke-width="4"/>
+                        <path d="M10,65 L90,65" stroke="#b8860b" stroke-width="4"/>
+                    </svg>
+                </div>
+                <div id="pop-right" class="pop-count">200 000</div>
+            </div>
+        </div>
+
+        <div id="game-over-overlay"><div id="game-over-text">ENEMY WINS</div></div>
+        <div id="win-overlay"><div id="win-text">YOU WIN</div></div>
+        
+        <canvas id="fx-canvas" width="1920" height="1080"></canvas>
+
+        <!-- BALANCE -->
+        <div class="balance-widget ui-panel-glass">
+            <div class="balance-label">BALANCE</div>
+            <div class="balance-amount">5,000.00</div>
+        </div>
+        
+        <!-- REGION -->
+        <div class="top-region-widget">
+            <div class="region-label">REGION</div>
+            <div class="region-box ui-panel-glass">
+                <span class="region-arrow" id="prev-region">&lt;</span>
+                <span id="region-name">ASIA</span>
+                <span class="region-arrow" id="next-region">&gt;</span>
+            </div>
+        </div>
+
+        <canvas id="bg-canvas" width="1920" height="1080"></canvas>
+        
+        <div class="stage-bg">
+            <div class="stage-floor"><div class="floor-planks"></div></div>
+            <div class="hologram-floor-spot"></div>
+        </div>
+        
+        <div class="globe-container">
+            <div class="globe">
+                <div class="map-strip" id="map-strip">
+                    <div class="region-view"><svg class="continent-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M20,20 L40,10 L70,10 L90,30 L80,50 L60,60 L40,55 L30,40 Z" /></svg></div>
+                    <div class="region-view"><svg class="continent-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M40,40 L60,45 L70,60 L50,90 L30,60 L35,45 Z" /></svg></div>
+                    <div class="region-view"><svg class="continent-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M45,20 L55,22 L60,30 L58,40 L65,42 L70,38 L75,45 L70,55 L60,58 L50,60 L40,55 L35,45 L30,35 L40,25 Z" /></svg></div>
+                    <div class="region-view"><svg class="continent-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M40,40 L60,40 L70,60 L50,85 L30,60 Z" /></svg></div>
+                    <div class="region-view"><svg class="continent-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M30,40 L50,30 L70,40 L60,60 L40,60 Z" /></svg></div>
+                    <div class="region-view"><svg class="continent-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M20,40 L35,30 L50,25 L70,30 L80,45 L75,60 L65,75 L45,70 L30,65 L25,55 Z" /><path d="M82,50 L88,52 L85,60 Z" /></svg></div>
+                    <div class="region-view"><svg class="continent-svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M20,50 L30,40 L50,50 L40,70 L20,60 Z M70,70 L80,70 L75,80 Z" /></svg></div>
+                </div>
+            </div>
+            <div class="hologram-beam"></div>
+        </div>
+        
+        <div class="nuke-container nuke-left"><div class="nuke-body"><div class="nuke-head"></div><div class="nuke-fin fin-l"></div><div class="nuke-fin fin-r"></div><div class="rad-symbol"></div></div></div>
+        <div class="nuke-container nuke-right"><div class="nuke-body"><div class="nuke-head"></div><div class="nuke-fin fin-l"></div><div class="nuke-fin fin-r"></div><div class="rad-symbol"></div></div></div>
+        <canvas id="rope-canvas" width="1920" height="1080"></canvas>
+        <div class="player-container" id="player-left">
+            <div class="limb thigh leg l"><div class="shin"><div class="foot"></div></div></div>
+            <div class="limb thigh leg r"><div class="shin"><div class="foot"></div></div></div>
+            <div class="body">
+                <div class="head"><div class="eye l"></div><div class="eye r"></div></div>
+                <div class="upper-arm arm l"><div class="forearm"><div class="hand"></div></div></div>
+                <div class="upper-arm arm r"><div class="forearm"><div class="hand"></div></div></div>
+            </div>
+        </div>
+        <div class="player-container" id="player-right">
+            <div class="limb thigh leg l"><div class="shin"><div class="foot"></div></div></div>
+            <div class="limb thigh leg r"><div class="shin"><div class="foot"></div></div></div>
+            <div class="body">
+                <div class="head"><div class="eye l"></div><div class="eye r"></div></div>
+                <div class="upper-arm arm l"><div class="forearm"><div class="hand"></div></div></div>
+                <div class="upper-arm arm r"><div class="forearm"><div class="hand"></div></div></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM UI -->
+        <div class="bottom-ui-panel ui-panel-glass">
+            <div class="section-label">BET AMOUNT</div>
+            <div class="bet-control-wrapper">
+                <button class="outer-action-btn" id="bet-minus">-</button>
+                <div class="bet-inner-box">
+                    <div class="modifier-btn" id="bet-half">½</div>
+                    <div class="bet-value-display" id="bet-display">$0.10</div>
+                    <div class="modifier-btn" id="bet-double">2x</div>
+                </div>
+                <button class="outer-action-btn" id="bet-plus">+</button>
+            </div>
+            <div class="section-label">PULL COMBO (ATTEMPTS)</div>
+            <div class="combo-container">
+                <div class="combo-option active" data-val="1">1</div>
+                <div class="combo-option" data-val="2">2</div>
+                <div class="combo-option" data-val="3">3</div>
+                <div class="combo-option" data-val="5">5</div>
+                <div class="combo-option" data-val="10">10</div>
+            </div>
+            <div class="section-label">RISK LEVEL (MULTIPLIER)</div>
+            <div class="multipliers-container">
+                <div class="mult-btn m-16" id="btn-1" onclick="playTurn(1)">1.1X</div>
+                <div class="mult-btn m-32" id="btn-2" onclick="playTurn(2)">2.2X</div>
+                <div class="mult-btn m-64" id="btn-3" onclick="playTurn(3)">3.3X</div>
+                <div class="mult-btn m-100" id="btn-4" onclick="playTurn(4)">4.4X</div>
+                <div class="mult-btn m-330" id="btn-5" onclick="playTurn(5)">5.5X</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+        const winOverlay = document.getElementById('win-overlay');
+        const flashOverlay = document.getElementById('flash-overlay');
+        const fxCanvas = document.getElementById('fx-canvas');
+        const fxCtx = fxCanvas.getContext('2d');
+        const betDisplay = document.getElementById('bet-display');
+        const balanceDisplay = document.querySelector('.balance-amount');
+        const popLeftEl = document.getElementById('pop-left');
+        const popRightEl = document.getElementById('pop-right');
+        const scoreDisplay = document.querySelector('.match-score');
+        
+        let currentScale = 1;
+
+        // --- REGIONS CONFIG ---
+        const regions = [
+            { name: "Північна Америка", mult: 1.5 },
+            { name: "Південна Америка", mult: 1.8 },
+            { name: "Європа", mult: 1.0 }, 
+            { name: "Африка", mult: 2.5 },
+            { name: "Близький Схід", mult: 3.0 },
+            { name: "Азія", mult: 2.0 }, 
+            { name: "Тихоокеанський Регіон", mult: 1.2 }
+        ];
+        let currentRegionIndex = 5; 
+
+        // --- GAME LOGIC VARS ---
+        let lastActionTime = performance.now();
+        let isEnemyPulling = false;
+        let enemyPullStartTime = 0;
+        let gameOffset = 0; 
+        let isGameOver = false;
+        let isBettingInProgress = false; 
+        let animationTimeout = null; 
+
+        let currentBet = 0.10;
+        let balance = 5000.00;
+        let currentCombo = 1;
+        
+        let popLeft = 200000;
+        let popRight = 200000;
+        let scoreLeft = 0;
+        let scoreRight = 0;
+
+        function updateUI() {
+            betDisplay.innerText = '$' + currentBet.toFixed(2);
+            balanceDisplay.innerText = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            popLeftEl.innerText = popLeft.toLocaleString().replace(/,/g, ' ');
+            popRightEl.innerText = popRight.toLocaleString().replace(/,/g, ' ');
+            scoreDisplay.innerText = `${scoreLeft} - ${scoreRight}`;
+        }
+
+        function updateButtons() {
+            const r = regions[currentRegionIndex];
+            const baseMults = [1.1, 2.2, 3.3, 4.4, 5.5];
+            for(let i=1; i<=5; i++) {
+                const btn = document.getElementById(`btn-${i}`);
+                const val = (baseMults[i-1] * r.mult).toFixed(1);
+                btn.innerText = val + "X";
+                btn.classList.remove('btn-bounce');
+                void btn.offsetWidth; 
+                btn.classList.add('btn-bounce');
+            }
+        }
+
+        function spawnFloatingText(text, color) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            el.style.color = color;
+            el.style.top = '400px'; 
+            gameContainer.appendChild(el); 
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        function playTurn(btnIndex) {
+            if (isGameOver || isBettingInProgress) return;
+            
+            lastActionTime = performance.now();
+            isEnemyPulling = false;
+            isBettingInProgress = true;
+            document.querySelectorAll('.mult-btn').forEach(b => b.classList.add('disabled'));
+
+            let betsLeft = currentCombo;
+            const r = regions[currentRegionIndex];
+            const baseMults = [1.1, 2.2, 3.3, 4.4, 5.5];
+            const currentMult = parseFloat((baseMults[btnIndex-1] * r.mult).toFixed(1));
+            
+            let winChance = 1.0 / (currentMult * 0.6); 
+            if(winChance > 0.9) winChance = 0.9;
+            if(winChance < 0.05) winChance = 0.05;
+
+            const intervalTime = 150; 
+
+            const interval = setInterval(() => {
+                if (isGameOver || betsLeft <= 0) {
+                    clearInterval(interval);
+                    isBettingInProgress = false;
+                    document.querySelectorAll('.mult-btn').forEach(b => b.classList.remove('disabled'));
+                    return;
+                }
+                if (balance < currentBet) {
+                    spawnFloatingText("NO MONEY", '#f44336');
+                    clearInterval(interval);
+                    isBettingInProgress = false;
+                    document.querySelectorAll('.mult-btn').forEach(b => b.classList.remove('disabled'));
+                    return;
+                }
+                executeSingleBet(currentMult, winChance);
+                betsLeft--;
+            }, intervalTime);
+        }
+
+        function executeSingleBet(multiplier, chance) {
+            balance -= currentBet;
+            const roll = Math.random();
+            const PULL_BASE = 15;
+            const RECOIL_BASE = 15;
+            let pullForce = PULL_BASE * (multiplier * 0.5); 
+            let recoilForce = RECOIL_BASE / (multiplier * 0.3); 
+            
+            if(recoilForce > 50) recoilForce = 50;
+            if(pullForce > 100) pullForce = 100;
+
+            if (roll < chance) {
+                let winAmount = currentBet * multiplier;
+                balance += winAmount;
+                gameOffset -= pullForce; 
+                spawnFloatingText(`+$${winAmount.toFixed(2)}`, '#4caf50');
+                if (winAmount > currentBet * 5) triggerConfettiBurst(960, 540, 30); // Celebration Particles
+            } else {
+                gameOffset += recoilForce;
+                spawnFloatingText("MISS", '#f44336');
+            }
+
+            updateUI();
+            pulseRope(15); 
+            checkCollision();
+        }
+
+        function checkCollision() {
+            const INITIAL_DIST = 250;
+            const COLLISION_DIST = 62;
+            
+            let rightDotRelX = INITIAL_DIST + gameOffset;
+            let leftDotRelX = -INITIAL_DIST + gameOffset;
+            
+            if (rightDotRelX <= COLLISION_DIST) {
+                popRight -= 10000; 
+                if(popRight < 0) popRight = 0;
+                scoreLeft++;
+                doWinSequence();
+            } 
+            else if (leftDotRelX >= -COLLISION_DIST) {
+                popLeft -= 10000; 
+                if(popLeft < 0) popLeft = 0;
+                scoreRight++;
+                doLoseSequence();
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (isGameOver) {
+                if (animationTimeout) clearTimeout(animationTimeout);
+                resetGame();
+            }
+            lastActionTime = performance.now();
+        });
+
+        document.querySelectorAll('.combo-option').forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                if (isBettingInProgress) return;
+                e.stopPropagation();
+                document.querySelectorAll('.combo-option').forEach(el => el.classList.remove('active'));
+                opt.classList.add('active');
+                currentCombo = parseInt(opt.getAttribute('data-val'));
+                lastActionTime = performance.now();
+            });
+        });
+
+        const betBtnHandler = (action) => (e) => {
+            if (isBettingInProgress) return;
+            e.stopPropagation();
+            if (action === 'plus') currentBet += 0.10;
+            if (action === 'minus' && currentBet > 0.10) currentBet -= 0.10;
+            if (action === 'double') currentBet *= 2;
+            if (action === 'half' && currentBet > 0.10) currentBet /= 2;
+            updateUI();
+            lastActionTime = performance.now();
+        };
+
+        document.getElementById('bet-plus').addEventListener('click', betBtnHandler('plus'));
+        document.getElementById('bet-minus').addEventListener('click', betBtnHandler('minus'));
+        document.getElementById('bet-double').addEventListener('click', betBtnHandler('double'));
+        document.getElementById('bet-half').addEventListener('click', betBtnHandler('half'));
+
+        function triggerFlash() {
+            flashOverlay.style.opacity = '1';
+            setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
+        }
+
+        function doWinSequence() {
+            if (isGameOver) return;
+            isGameOver = true;
+            triggerFlash();
+            winOverlay.style.opacity = '1';
+            launchFireworks();
+            updateUI();
+            animationTimeout = setTimeout(() => resetGame(), 5000);
+        }
+
+        function doLoseSequence() {
+            if (isGameOver) return;
+            isGameOver = true;
+            gameOverOverlay.style.opacity = '1';
+            gameContainer.style.filter = 'brightness(0.4)'; // Still darken game behind overlay
+            updateUI();
+            animationTimeout = setTimeout(() => resetGame(), 3000);
+        }
+
+        function resetGame() {
+            isGameOver = false;
+            isEnemyPulling = false;
+            isBettingInProgress = false;
+            document.querySelectorAll('.mult-btn').forEach(b => b.classList.remove('disabled'));
+            lastActionTime = performance.now();
+            gameOffset = 0;
+            gameOverOverlay.style.opacity = '0';
+            winOverlay.style.opacity = '0';
+            gameContainer.style.filter = 'brightness(1)';
+            fxCtx.clearRect(0,0,fxCanvas.width, fxCanvas.height);
+            fireworks = [];
+            particles = [];
+            updateUI();
+        }
+
+        let fireworks = [];
+        let particles = [];
+
+        class Particle {
+            constructor(x, y, color, speed, life, gravity) {
+                this.x = x; this.y = y; this.color = color;
+                this.vx = (Math.random() - 0.5) * speed;
+                this.vy = (Math.random() - 0.5) * speed;
+                this.life = life; this.alpha = 1;
+                this.gravity = gravity || 0.05;
+                this.drag = 0.96; // Air resistance
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy; 
+                this.vy += this.gravity;
+                this.vx *= this.drag; this.vy *= this.drag;
+                this.life--; this.alpha = Math.max(0, this.life/100);
+            }
+            draw(ctx) {
+                ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, 4, 4);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function triggerConfettiBurst(x, y, count) {
+            const colors = ['#ffd700', '#ff0000', '#ffffff', '#ff8c00']; // Gold, Red, White, Orange
+            for(let i=0; i<count; i++) {
+                particles.push(new Particle(x, y, colors[Math.floor(Math.random()*colors.length)], 15, 100 + Math.random()*50, 0.2));
+            }
+        }
+
+        function launchFireworks() {
+            const interval = setInterval(() => {
+                if(!isGameOver) { clearInterval(interval); return; }
+                const x = Math.random() * 1920;
+                const y = 1080;
+                // Launch more intense fireworks
+                triggerConfettiBurst(x, 200 + Math.random()*400, 80);
+                
+                // Add "Gold Rain" from top
+                for(let i=0; i<5; i++) {
+                     particles.push(new Particle(Math.random()*1920, -10, '#ffd700', 5, 200, 0.1));
+                }
+
+            }, 200);
+        }
+
+        function updateFX() {
+            fxCtx.clearRect(0,0,1920,1080);
+            for(let i=particles.length-1; i>=0; i--) {
+                particles[i].update();
+                particles[i].draw(fxCtx);
+                if(particles[i].life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        const regionNameEl = document.getElementById('region-name');
+        const mapStripEl = document.getElementById('map-strip');
+        document.getElementById('prev-region').addEventListener('click', (e) => { e.stopPropagation(); currentRegionIndex = (currentRegionIndex - 1 + regions.length) % regions.length; updateRegion(); });
+        document.getElementById('next-region').addEventListener('click', (e) => { e.stopPropagation(); currentRegionIndex = (currentRegionIndex + 1) % regions.length; updateRegion(); });
+        function updateRegion() { 
+            regionNameEl.innerText = regions[currentRegionIndex].name; 
+            mapStripEl.style.transform = `translateX(-${currentRegionIndex * 380}px)`;
+            updateButtons();
+        }
+        updateRegion();
+
+        const brickCanvas = document.createElement('canvas'); brickCanvas.width = 60; brickCanvas.height = 30;
+        const bCtx = brickCanvas.getContext('2d'); bCtx.fillStyle = '#1a1a1a'; bCtx.fillRect(0,0,60,30); bCtx.strokeStyle = '#111'; bCtx.lineWidth = 2; bCtx.strokeRect(0,0,60,30);
+        const brickPattern = bCtx.createPattern(brickCanvas, 'repeat');
+        const crateCanvas = document.createElement('canvas'); crateCanvas.width = 40; crateCanvas.height = 40;
+        const cCtx = crateCanvas.getContext('2d'); cCtx.fillStyle = '#4E342E'; cCtx.fillRect(0,0,40,40); cCtx.strokeStyle = '#3E2723'; cCtx.lineWidth=2; cCtx.strokeRect(0,0,40,40); cCtx.beginPath(); cCtx.moveTo(0,0); cCtx.lineTo(40,40); cCtx.moveTo(40,0); cCtx.lineTo(0,40); cCtx.stroke();
+        const cratePattern = cCtx.createPattern(crateCanvas, 'repeat');
+        
+        function drawStarShape(ctx, cx, cy, spikes, r0, r1) {
+            let rot = Math.PI/2*3, x=cx, y=cy, step=Math.PI/spikes;
+            ctx.beginPath(); ctx.moveTo(cx, cy-r0);
+            for(let i=0; i<spikes; i++) { x=cx+Math.cos(rot)*r0; y=cy+Math.sin(rot)*r0; ctx.lineTo(x,y); rot+=step; x=cx+Math.cos(rot)*r1; y=cy+Math.sin(rot)*r1; ctx.lineTo(x,y); rot+=step; }
+            ctx.lineTo(cx, cy-r0); ctx.closePath(); ctx.fill();
+        }
+        let flagAssets = { usa: null, china: null };
+        function initFlags() {
+            const w=340, h=200; const usa=document.createElement('canvas'); usa.width=w; usa.height=h; const cU=usa.getContext('2d');
+            const sH=h/13; cU.fillStyle='#FFF'; cU.fillRect(0,0,w,h); cU.fillStyle='#B71C1C'; for(let i=0; i<13; i+=2) cU.fillRect(0, i*sH, w, sH); cU.fillStyle='#0D47A1'; cU.fillRect(0,0, w*0.42, sH*7); cU.fillStyle='#FFF';
+            for(let r=0; r<9; r++) for(let c=0; c<11; c++) if((r+c)%2===0) { cU.beginPath(); cU.arc(12+c*(w*0.42-24)/10, 12+r*(sH*7-24)/8, 3, 0, Math.PI*2); cU.fill(); }
+            flagAssets.usa = usa;
+            const china=document.createElement('canvas'); china.width=w; china.height=h; const cC=china.getContext('2d');
+            cC.fillStyle='#D32F2F'; cC.fillRect(0,0,w,h); cC.fillStyle='#FFD600'; drawStarShape(cC, 50, 50, 5, 28, 12);
+            [{x:100,y:20,r:0.2},{x:120,y:45,r:0.5},{x:120,y:75,r:0.8},{x:100,y:100,r:1.0}].forEach(s=>{ cC.save(); cC.translate(s.x, s.y); cC.rotate(s.r); drawStarShape(cC, 0,0, 5, 9, 3.5); cC.restore(); });
+            flagAssets.china = china;
+        }
+        initFlags();
+
+        const bgCanvas = document.getElementById('bg-canvas'); const bgCtx = bgCanvas.getContext('2d');
+        const DESIGN_WIDTH = 1920, DESIGN_HEIGHT = 1080;
+        function drawBackgroundLayer(realTime) {
+            bgCtx.clearRect(0,0,DESIGN_WIDTH, DESIGN_HEIGHT);
+            const floorY = 660, wallH = floorY;
+            bgCtx.fillStyle = '#0a0a0a'; bgCtx.fillRect(0, 0, DESIGN_WIDTH, wallH);
+            bgCtx.save(); bgCtx.globalAlpha = 0.2; bgCtx.fillStyle = brickPattern; bgCtx.fillRect(0, 0, DESIGN_WIDTH, wallH); bgCtx.globalAlpha = 1.0; bgCtx.restore();
+            let wallGrad = bgCtx.createLinearGradient(0, 0, DESIGN_WIDTH, 0); wallGrad.addColorStop(0, 'rgba(10, 20, 60, 0.8)'); wallGrad.addColorStop(0.4, 'rgba(20, 20, 20, 0.5)'); wallGrad.addColorStop(1, 'rgba(60, 10, 10, 0.8)');
+            bgCtx.fillStyle = wallGrad; bgCtx.fillRect(0, 0, DESIGN_WIDTH, wallH);
+
+            const trussY = 50; bgCtx.fillStyle = '#111'; bgCtx.fillRect(0, 0, DESIGN_WIDTH, trussY); bgCtx.globalCompositeOperation = 'screen'; 
+            const pulse = (Math.sin(realTime * 0.002) + 1) * 0.5; 
+            for (let i = 0; i < 7; i++) {
+                let x = 300 + i * (DESIGN_WIDTH - 600) / 6; let isLeft = i < 3, isRight = i > 3; let colorBase = isLeft ? '80, 210, 255' : (isRight ? '255, 60, 60' : '255, 240, 200');
+                let lampGrad = bgCtx.createRadialGradient(x, trussY, 0, x, trussY, 50); lampGrad.addColorStop(0, `rgba(255, 255, 255, 1)`); lampGrad.addColorStop(0.3, `rgba(${colorBase}, 0.8)`); lampGrad.addColorStop(1, `rgba(${colorBase}, 0)`);
+                bgCtx.fillStyle = lampGrad; bgCtx.beginPath(); bgCtx.arc(x, trussY, 60, 0, Math.PI * 2); bgCtx.fill();
+                let beamAlpha = 0.12 + (pulse * 0.03); 
+                let beamGrad = bgCtx.createLinearGradient(x, trussY, x, floorY); beamGrad.addColorStop(0, `rgba(${colorBase}, ${beamAlpha})`); beamGrad.addColorStop(0.7, `rgba(${colorBase}, ${beamAlpha * 0.3})`); beamGrad.addColorStop(1, `rgba(${colorBase}, 0)`);
+                bgCtx.fillStyle = beamGrad; bgCtx.beginPath(); bgCtx.moveTo(x - 25, trussY); bgCtx.lineTo(x - 220 + (i-3)*50, floorY); bgCtx.lineTo(x + 220 + (i-3)*50, floorY); bgCtx.lineTo(x + 25, trussY); bgCtx.fill();
+            }
+            bgCtx.globalCompositeOperation = 'source-over';
+            const startY = floorY - 60;
+            const drawCrate = (x, y) => { bgCtx.fillStyle = '#5D4037'; bgCtx.fillRect(x, y, 80, 80); bgCtx.save(); bgCtx.fillStyle = cratePattern; bgCtx.globalAlpha = 0.3; bgCtx.fillRect(x, y, 80, 80); bgCtx.globalAlpha = 1.0; bgCtx.restore(); bgCtx.strokeStyle = '#3E2723'; bgCtx.lineWidth = 4; bgCtx.strokeRect(x, y, 80, 80); bgCtx.beginPath(); bgCtx.moveTo(x, y); bgCtx.lineTo(x+80, y+80); bgCtx.moveTo(x+80, y); bgCtx.lineTo(x, y+80); bgCtx.stroke(); };
+            drawCrate(20, startY); drawCrate(100, startY); drawCrate(180, startY); drawCrate(260, startY); drawCrate(60, startY - 80); drawCrate(140, startY - 80); drawCrate(220, startY - 80); drawCrate(100, startY - 160); drawCrate(180, startY - 160);
+            drawCrate(DESIGN_WIDTH-100, startY); drawCrate(DESIGN_WIDTH-180, startY); drawCrate(DESIGN_WIDTH-260, startY); drawCrate(DESIGN_WIDTH-340, startY); drawCrate(DESIGN_WIDTH-140, startY - 80); drawCrate(DESIGN_WIDTH-220, startY - 80); drawCrate(DESIGN_WIDTH-300, startY - 80); drawCrate(DESIGN_WIDTH-180, startY - 160); drawCrate(DESIGN_WIDTH-260, startY - 160);
+            const drawF = (key, x) => { const img = flagAssets[key]; if(!img) return; const slices=40, w=img.width, sliceW=w/slices; bgCtx.save(); bgCtx.shadowColor='rgba(0,0,0,0.8)'; bgCtx.shadowBlur=20; bgCtx.shadowOffsetY=15; for(let i=0; i<slices; i++) { const y = Math.sin(i*0.2 + realTime*0.005)*10 + 100; bgCtx.drawImage(img, i*sliceW,0, sliceW+1,img.height, x+i*sliceW, y, sliceW+1, img.height); } bgCtx.restore(); };
+            drawF('usa', 150); drawF('china', DESIGN_WIDTH-490);
+        }
+
+        function updateScale() {
+            const width = window.innerWidth, height = window.innerHeight;
+            const scaleX = (width - 20) / 1920, scaleY = (height - 20) / 1080;
+            currentScale = Math.min(scaleX, scaleY);
+            gameContainer.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+        }
+        window.addEventListener('resize', () => requestAnimationFrame(updateScale));
+        window.addEventListener('load', updateScale);
+        updateScale();
+
+        const playerLeft = document.getElementById('player-left');
+        const playerRight = document.getElementById('player-right');
+        const canvas = document.getElementById('rope-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const ropePoints = [];
+        const numPoints = 25;
+        const gravity = 0.8; 
+        const friction = 0.9;
+        let time = 0, tugMomentum = 0;
+        
+        // STANDARD POSITIONS
+        const baseLeftX = 420, baseRightX = 1500, floorY = 500; 
+        
+        const startAnchorLeft = { x: baseLeftX + 90, y: floorY + 60 };
+        const startAnchorRight = { x: baseRightX - 90, y: floorY + 60 };
+        const ropeTotalLength = 1000, segmentLen = ropeTotalLength / (numPoints - 1);
+        for (let i = 0; i < numPoints; i++) { let x = startAnchorLeft.x + (i / (numPoints - 1)) * (startAnchorRight.x - startAnchorLeft.x); ropePoints.push({ x: x, y: startAnchorLeft.y, oldx: x, oldy: startAnchorLeft.y }); }
+
+        function animate() {
+            if (isGameOver) { 
+                updateFX();
+                requestAnimationFrame(animate); 
+                return; 
+            }
+            time += 0.0035; const now = performance.now();
+            drawBackgroundLayer(now);
+            updateFX();
+
+            // INCREASED IDLE TIMEOUT: 6 SECONDS
+            const IDLE_TIMEOUT = 6000; 
+            const PULL_DURATION = 30000; 
+
+            if (!isEnemyPulling && !isBettingInProgress && (now - lastActionTime > IDLE_TIMEOUT)) {
+                isEnemyPulling = true; enemyPullStartTime = now;
+            }
+
+            let squashScaleX=1, squashScaleY=1, offsetY=0, offsetX=0;
+            let leftLean = -10, rightLean = -10;
+            let leftArmRot = -30, leftForearmRot = 80;
+            let rightArmRot = -30, rightForearmRot = 80;
+            let ropeTension = 0; 
+
+            if (isEnemyPulling) {
+                let pullElapsed = now - enemyPullStartTime;
+                let idleProgress = Math.min(pullElapsed / PULL_DURATION, 1);
+                gameOffset += 0.5; 
+                const heaveCycle = Math.sin(time * 6); 
+                const t = (heaveCycle + 1) / 2; 
+                const pullLean = 10;
+                const reachLean = -25; 
+                leftLean = (1-t) * reachLean + t * pullLean + (idleProgress * 10);
+                rightLean = leftLean; 
+                squashScaleY = (1-t) * 1.05 + t * 0.95;
+                squashScaleX = (1-t) * 0.95 + t * 1.05;
+                offsetY = (1-t) * -5 + t * 10; 
+                ropeTension = t; 
+                offsetX = (Math.random()-0.5) * (t * 4);
+                
+                checkCollision(); 
+
+            } else {
+                const idleSpeed = time * 5; 
+                const crouch = Math.abs(Math.sin(idleSpeed));
+                offsetY = crouch * 15; 
+                const squashAmount = 0.05 * crouch;
+                squashScaleY = 1 - squashAmount;
+                squashScaleX = 1 + squashAmount;
+                ropeTension = 0.1;
+                leftLean = -10 + Math.sin(time*3)*2;
+                rightLean = -10 - Math.sin(time*3)*2;
+            }
+
+            const leftHipX = baseLeftX + gameOffset + offsetX;
+            const leftHipY = 500 + offsetY;
+            
+            playerLeft.style.left = `${leftHipX}px`; playerLeft.style.top = `${leftHipY}px`;
+            playerLeft.style.transform = `translate(-50%, 0) scaleX(${-1 * squashScaleX}) scaleY(${squashScaleY})`;
+            playerLeft.querySelector('.body').style.transform = `rotate(${leftLean}deg)`;
+            playerLeft.querySelector('.head').style.transform = `rotate(${-leftLean * 0.5}deg)`; 
+            playerLeft.querySelectorAll('.upper-arm').forEach(u => u.style.transform = `rotate(${leftArmRot}deg)`);
+            playerLeft.querySelectorAll('.forearm').forEach(f => f.style.transform = `rotate(${leftForearmRot}deg)`);
+
+            const kneeBend = offsetY * 1.2; 
+            playerLeft.querySelectorAll('.thigh')[0].style.transform = `rotate(${-leftLean + 20 + kneeBend}deg)`;
+            playerLeft.querySelectorAll('.shin')[0].style.transform = `rotate(${-10 - kneeBend}deg)`;
+            playerLeft.querySelectorAll('.thigh')[1].style.transform = `rotate(${-leftLean - 40 - kneeBend}deg)`;
+            playerLeft.querySelectorAll('.shin')[1].style.transform = `rotate(${50 + kneeBend}deg)`;
+
+            const rightContainerRight = 420 - gameOffset - offsetX; 
+            const rightHipY = 500 + offsetY;
+            
+            playerRight.style.right = `${rightContainerRight}px`; playerRight.style.top = `${rightHipY}px`;
+            playerRight.style.transform = `translate(50%, 0) scaleX(${squashScaleX}) scaleY(${squashScaleY})`;
+            playerRight.querySelector('.body').style.transform = `rotate(${rightLean}deg)`;
+            playerRight.querySelector('.head').style.transform = `rotate(${-rightLean * 0.5}deg)`;
+            playerRight.querySelectorAll('.upper-arm').forEach(u => u.style.transform = `rotate(${rightArmRot}deg)`);
+            playerRight.querySelectorAll('.forearm').forEach(f => f.style.transform = `rotate(${rightForearmRot}deg)`);
+
+            playerRight.querySelectorAll('.thigh')[0].style.transform = `rotate(${-rightLean + 20 + kneeBend}deg)`;
+            playerRight.querySelectorAll('.shin')[0].style.transform = `rotate(${-10 - kneeBend}deg)`;
+            playerRight.querySelectorAll('.thigh')[1].style.transform = `rotate(${-rightLean - 40 - kneeBend}deg)`;
+            playerRight.querySelectorAll('.shin')[1].style.transform = `rotate(${50 + kneeBend}deg)`;
+
+            const containerRect = gameContainer.getBoundingClientRect();
+            const leftHandElem = playerLeft.querySelector('.arm.r .hand');
+            const rightHandElem = playerRight.querySelector('.arm.r .hand');
+            let handX = startAnchorLeft.x, handY = startAnchorLeft.y, rightHandX = startAnchorRight.x, rightHandY = startAnchorRight.y;
+            if (leftHandElem && rightHandElem && currentScale > 0) {
+                const lRect = leftHandElem.getBoundingClientRect(), rRect = rightHandElem.getBoundingClientRect();
+                handX = (lRect.left + lRect.width/2 - containerRect.left) / currentScale; handY = (lRect.top + lRect.height/2 - containerRect.top) / currentScale;
+                rightHandX = (rRect.left + rRect.width/2 - containerRect.left) / currentScale; rightHandY = (rRect.top + rRect.height/2 - containerRect.top) / currentScale;
+            }
+
+            updateRope(handX, handY, rightHandX, rightHandY, ropeTension);
+            drawRope();
+            requestAnimationFrame(animate);
+        }
+
+        function updateRope(x1, y1, x2, y2, tension) {
+            if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) return;
+            const FLOOR_Y = 620; 
+            let effectiveGravity = gravity * (1 - tension);
+
+             for (let i = 0; i < numPoints; i++) {
+                let p = ropePoints[i];
+                if (i !== 0 && i !== numPoints - 1) {
+                    let vx = (p.x - p.oldx) * friction;
+                    let vy = (p.y - p.oldy) * friction;
+                    p.oldx = p.x; p.oldy = p.y;
+                    p.x += vx; p.y += vy; p.y += effectiveGravity; 
+                    if (tension > 0.8) { p.y += (Math.random() - 0.5) * 2; }
+                    if (p.y > FLOOR_Y) { p.y = FLOOR_Y; if (vx > 0) p.oldx = p.x - vx * 0.5; }
+                }
+            }
+            const iterations = 50; 
+            for (let iter = 0; iter < iterations; iter++) {
+                ropePoints[0].x = x1; ropePoints[0].y = y1;
+                ropePoints[numPoints - 1].x = x2; ropePoints[numPoints - 1].y = y2;
+                for (let i = 0; i < numPoints - 1; i++) {
+                    let p1 = ropePoints[i], p2 = ropePoints[i + 1];
+                    let dx = p2.x - p1.x, dy = p2.y - p1.y, dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 0.001) dist = 0.001;
+                    let diff = segmentLen - dist, percent = diff / dist / 2;
+                    if (tension > 0.5) percent *= 1.2; 
+                    let offsetX = dx * percent, offsetY = dy * percent;
+                    if (i !== 0) { p1.x -= offsetX; p1.y -= offsetY; if (p1.y > FLOOR_Y) p1.y = FLOOR_Y; }
+                    if (i + 1 !== numPoints - 1) { p2.x += offsetX; p2.y += offsetY; if (p2.y > FLOOR_Y) p2.y = FLOOR_Y; }
+                }
+            }
+        }
+
+        function drawRope() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath(); ctx.moveTo(ropePoints[0].x, ropePoints[0].y);
+            for (let i = 1; i < numPoints - 1; i++) {
+                let xc = (ropePoints[i].x + ropePoints[i + 1].x) / 2;
+                let yc = (ropePoints[i].y + ropePoints[i + 1].y) / 2;
+                ctx.quadraticCurveTo(ropePoints[i].x, ropePoints[i].y, xc, yc);
+            }
+            ctx.lineTo(ropePoints[numPoints-1].x, ropePoints[numPoints-1].y);
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.lineWidth = 18; ctx.strokeStyle = '#3e2723'; ctx.stroke();
+            ctx.lineWidth = 12; ctx.strokeStyle = '#d7ccc8'; ctx.stroke();
+
+            const centerX = 1920 / 2;
+            let skullY = ropePoints[Math.floor(numPoints/2)].y; 
+            
+            for(let i=0; i<numPoints-1; i++) {
+                if(ropePoints[i].x <= centerX && ropePoints[i+1].x >= centerX) {
+                    const ratio = (centerX - ropePoints[i].x) / (ropePoints[i+1].x - ropePoints[i].x);
+                    skullY = ropePoints[i].y + (ropePoints[i+1].y - ropePoints[i].y) * ratio;
+                    break;
+                }
+            }
+
+            ctx.save(); ctx.translate(centerX, skullY); 
+            ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10;
+            
+            ctx.beginPath(); ctx.arc(0, 0, 50, 0, Math.PI * 2); 
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.3)'; ctx.fill();
+            ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2; ctx.stroke();
+
+            ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2); ctx.fill(); 
+            ctx.fillStyle = '#d4ac0d'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            
+            ctx.shadowBlur = 0; ctx.fillStyle = '#222'; ctx.font = '34px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('💀', 0, 2);
+            ctx.restore();
+
+            let mid = Math.floor(numPoints/2);
+            
+            let pLeft = ropePoints[mid - 6]; 
+            ctx.beginPath(); ctx.arc(pLeft.x, pLeft.y, 12, 0, Math.PI*2);
+            ctx.fillStyle = '#0088ff'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth=3; ctx.stroke();
+
+            let pRight = ropePoints[mid + 6];
+            ctx.beginPath(); ctx.arc(pRight.x, pRight.y, 12, 0, Math.PI*2);
+            ctx.fillStyle = '#ff3333'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth=3; ctx.stroke();
+        }
+        window.pulseRope = function(force) { tugMomentum += force * 0.2; }
+        animate();
+    </script>
+</body>
+</html>
