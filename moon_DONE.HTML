@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moooon 1:1 Exact Replica (Coordinate Fix)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Градієнти кульок */
+            --grad-1x: linear-gradient(135deg, #aed581 0%, #7cb342 100%);
+            --grad-2x: linear-gradient(135deg, #80cbc4 0%, #26a69a 100%);
+            --grad-10x: linear-gradient(135deg, #90caf9 0%, #42a5f5 100%);
+            --grad-20x: linear-gradient(135deg, #b39ddb 0%, #7e57c2 100%);
+            --grad-50x: linear-gradient(135deg, #f48fb1 0%, #ec407a 100%);
+            --grad-300x: linear-gradient(135deg, #ffab91 0%, #ff7043 100%);
+            
+            /* Кольори світіння */
+            --glow-1x: #7cb342; --glow-2x: #26a69a; --glow-10x: #42a5f5;
+            --glow-20x: #7e57c2; --glow-50x: #ec407a; --glow-300x: #ff7043;
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+
+        body {
+            margin: 0; padding: 0; width: 100vw; height: 100vh;
+            background: #050208; 
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Fredoka', sans-serif; overflow: hidden;
+        }
+
+        /* --- ГОЛОВНИЙ ФРЕЙМ 16:9 --- */
+        #game-frame {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            width: 95vw;
+            max-height: 95vh;
+            max-width: 168.88vh; 
+            container-type: size;
+            background: radial-gradient(circle at 50% 30%, #3e2063 0%, #1a0b2e 80%);
+            overflow: hidden; 
+            box-shadow: 0 0 100px rgba(0,0,0,0.9);
+            border: 2px solid #2a1b3d;
+            border-radius: 8px;
+            display: flex; flex-direction: column; color: white;
+        }
+
+        /* --- BACKGROUND --- */
+        .stars-container { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.8; animation: starScroll 10s linear infinite; }
+        .bg-cloud { position: absolute; background: radial-gradient(circle, rgba(244, 143, 177, 0.15) 0%, rgba(244, 143, 177, 0) 70%); border-radius: 50%; filter: blur(20px); z-index: 0; animation: floatCloud 20s linear infinite alternate; }
+        
+        @keyframes starScroll { from { transform: translateY(-10cqh); } to { transform: translateY(110cqh); } }
+        @keyframes floatCloud { from { transform: translateX(-5%) translateY(0); } to { transform: translateX(5%) translateY(5%); } }
+
+        /* Speed Lines */
+        .speed-lines-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 0.2s; }
+        .speed-lines-container.active { opacity: 1; }
+        .speed-line { position: absolute; width: 2px; background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.9), transparent); top: -50cqh; }
+        @keyframes warpSpeed { 0% { transform: translateY(-50cqh); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(150cqh); opacity: 0; } }
+        #game-frame.hyperspace .star { animation: warpSpeed 0.3s linear infinite; width: 2px !important; height: 50cqh !important; opacity: 0.5; box-shadow: 0 0 10px white; }
+        
+        @keyframes flyShake {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-2px); }
+            75% { transform: translateY(2px); }
+        }
+        #game-frame.hyperspace { animation: flyShake 0.1s linear infinite; }
+        
+        #game-frame.hyperspace #character-wrap svg { animation: flyingBull 0.3s ease-in-out infinite !important; }
+        @keyframes flyingBull {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-0.8cqw) rotate(-8deg); }
+        }
+        
+        #game-frame.hyperspace .bg-cloud { animation: cloudFlyDown 0.5s linear infinite !important; }
+        @keyframes cloudFlyDown {
+            from { transform: translateY(-20cqh); opacity: 0.3; }
+            to { transform: translateY(120cqh); opacity: 0; }
+        }
+
+        #dim-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 8; 
+        }
+        #dim-overlay.active { opacity: 0.4; } 
+
+        /* Cloud & Sign */
+        .cloud-container { position: absolute; top: 15%; right: 5%; width: 22%; z-index: 5; transition: opacity 0.5s; }
+        .cloud-svg { width: 100%; filter: drop-shadow(0 0.5cqw 1.5cqw rgba(0,0,0,0.3)); overflow: visible; }
+        .sign-group { position: absolute; top: -25%; left: 55%; transform: translateX(-50%) rotate(-6deg); width: 65%; z-index: 10; }
+        .sign-board { background: #fbe9e7; border: 0.15cqw solid #d7ccc8; padding: 0.4cqw 0; border-radius: 0.4cqw; color: #3e2723; box-shadow: 0.2cqw 0.4cqw 0 rgba(0,0,0,0.2); text-align: center; position: relative; }
+        .sign-board::after { content: ''; position: absolute; bottom: -120%; left: 50%; width: 12%; height: 130%; background: #5d4037; transform: translateX(-50%); z-index: -1; }
+        .sign-title { font-size: 1.6cqw; font-weight: 800; line-height: 1; }
+        .sign-sub { font-size: 0.9cqw; font-weight: 700; opacity: 0.7; margin-top: 0.1cqw; }
+
+        /* --- GAME AREA --- */
+        .game-area {
+            flex: 1; position: relative; z-index: 10; display: flex; justify-content: center; align-items: flex-end;
+            padding-bottom: 24%; padding-left: 0; transition: opacity 0.5s;
+        }
+        .game-area.hidden, .cloud-container.hidden { opacity: 0; pointer-events: none; }
+
+        /* Сітка ліній */
+        .lanes-grid { display: flex; align-items: flex-end; gap: 1.5cqw; height: 100%; padding-top: 10%; }
+        .separator { width: 3cqw; }
+        
+        .lane-col { 
+            position: relative; width: 4.5cqw; height: 100%; 
+            transition: opacity 0.3s, filter 0.3s;
+        }
+        
+        .lanes-grid.focus-mode .lane-col { opacity: 0.3; filter: grayscale(0.3); }
+        .lanes-grid.focus-mode .lane-col.highlighted { opacity: 1; filter: none; z-index: 20; }
+
+        .lane-col::before {
+            content: ''; position: absolute; bottom: -5.5cqw; left: 50%; width: 3.5cqw; height: 65cqh;
+            background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.05) 100%);
+            transform: translateX(-50%); border-radius: 2cqw; z-index: -1;
+        }
+
+        /* Bubbles */
+        .bubbles-container { 
+            position: absolute; width: 100%; bottom: 0; height: 150cqh; left: 0; pointer-events: none;
+        }
+        
+        .lane-col.highlighted .bubbles-container { clip-path: inset(0 0 var(--clip-bottom, 0px) 0); }
+        
+        .bubble {
+            position: absolute; left: 50%; transform: translateX(-50%); width: 4.5cqw; height: 4.5cqw;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-weight: 700; font-size: 1.3cqw; color: white; text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            z-index: 2; transition: transform 0.2s, box-shadow 0.15s; transform-origin: center center; 
+        }
+        .bubble.pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%) scale(1); } }
+        .bubble::after { content: ''; position: absolute; top: 10%; left: 15%; width: 30%; height: 20%; border-radius: 50%; background: rgba(255,255,255,0.7); filter: blur(2px); transform: rotate(-45deg); }
+        .bubble.blur-move { filter: blur(3px); transform: translateX(-50%) scaleY(1.3); }
+
+        .b-1x { background: radial-gradient(circle at 30% 30%, #dcedc8, var(--glow-1x)); box-shadow: 0 0 1.5cqw var(--glow-1x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-2x { background: radial-gradient(circle at 30% 30%, #b2dfdb, var(--glow-2x)); box-shadow: 0 0 1.5cqw var(--glow-2x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-10x { background: radial-gradient(circle at 30% 30%, #bbdefb, var(--glow-10x)); box-shadow: 0 0 1.5cqw var(--glow-10x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-20x { background: radial-gradient(circle at 30% 30%, #d1c4e9, var(--glow-20x)); box-shadow: 0 0 1.5cqw var(--glow-20x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-50x { background: radial-gradient(circle at 30% 30%, #f8bbd0, var(--glow-50x)); box-shadow: 0 0 1.5cqw var(--glow-50x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-300x { background: radial-gradient(circle at 30% 30%, #ffccbc, var(--glow-300x)); box-shadow: 0 0 1.5cqw var(--glow-300x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        
+        .b-1x.glowing { box-shadow: 0 0 3cqw 1cqw var(--glow-1x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-2x.glowing { box-shadow: 0 0 3cqw 1cqw var(--glow-2x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-10x.glowing { box-shadow: 0 0 3cqw 1cqw var(--glow-10x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-20x.glowing { box-shadow: 0 0 3cqw 1cqw var(--glow-20x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-50x.glowing { box-shadow: 0 0 3cqw 1cqw var(--glow-50x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+        .b-300x.glowing { box-shadow: 0 0 3cqw 1cqw var(--glow-300x), inset 0 0 1cqw rgba(255,255,255,0.5); }
+
+        .lane-arrow {
+            position: absolute; bottom: -5.5cqw; left: 50%; transform: translateX(-50%); width: 4.5cqw; height: 4.5cqw;
+            border-radius: 50%; background: rgba(255,255,255,0.1); border: 0.15cqw solid rgba(255,255,255,0.2);
+            display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 1; transition: transform 0.1s;
+        }
+        .lane-arrow:hover { background: rgba(255,255,255,0.25); transform: translateX(-50%) scale(1.05); }
+        .lane-arrow svg { width: 50%; fill: rgba(255,255,255,0.7); }
+
+        /* --- CHARACTER FIX --- */
+        #character-wrap {
+            position: absolute;
+            /* Жорстка прив'язка до висоти фрейму (Container Query Height) */
+            bottom: 18cqh; 
+            left: 50%; 
+            transform: translateX(-50%) scale(var(--bull-scale, 1)); 
+            width: 8cqw; height: 8cqw; z-index: 20;
+            transition: left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.15s ease, transform 0.15s ease;
+            --bull-scale: 1;
+        }
+        
+        #character-wrap svg { animation: hovering 2s ease-in-out infinite; transition: transform 0.1s; }
+        #character-wrap.absorbing svg { transform: scale(1.3); }
+        
+        #character-wrap.winning {
+            bottom: 40%; left: 50%; transform: translateX(-50%) scale(1.5);
+            z-index: 1001; filter: drop-shadow(0 0 20px gold);
+        }
+        #character-wrap.winning svg { animation: bullDance 0.6s infinite ease-in-out; }
+        @keyframes bullDance {
+            0% { transform: translateY(0) scale(1, 1) rotate(0deg); }
+            25% { transform: translateY(-3cqw) scale(0.9, 1.1) rotate(-10deg); }
+            50% { transform: translateY(0) scale(1.2, 0.8) rotate(0deg); }
+            75% { transform: translateY(-1.5cqw) scale(0.95, 1.05) rotate(10deg); }
+            100% { transform: translateY(0) scale(1, 1) rotate(0deg); }
+        }
+        @keyframes hovering { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.6cqw); } }
+
+        #target-point { position: absolute; top: 15%; left: 50%; width: 1px; height: 1px; background: transparent; }
+
+        /* --- CONTROLS --- */
+        .controls-wrapper { position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%); z-index: 100; width: 28%; transition: opacity 0.5s; }
+        .controls-wrapper.hidden { opacity: 0; pointer-events: none; }
+        .panel-bg { background: #332219; border-radius: 1.5cqw; padding: 1cqw 1.2cqw; display: flex; flex-direction: column; gap: 0.8cqw; box-shadow: 0 1cqw 2cqw rgba(0,0,0,0.6); border: 0.15cqw solid #523c2e; height: auto; }
+        .bet-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding: 0 0.5cqw; }
+        .bet-group { display: flex; flex-direction: column; align-items: center; }
+        .bet-label { font-size: 0.7cqw; color: #bebdb8; font-weight: 800; margin-bottom: 0.3cqw; text-transform: uppercase; letter-spacing: 0.05cqw; }
+        .symbol-btn { background: none; border: none; color: #bebdb8; font-size: 2cqw; font-weight: 900; cursor: pointer; padding: 0; line-height: 1; height: 2cqw; display: flex; align-items: center; transition: transform 0.1s; }
+        .symbol-btn:active { transform: scale(0.9); color: white; }
+        .input-pill { background: #e6dac7; border-radius: 0.8cqw; height: 2.8cqw; width: 12cqw; display: flex; justify-content: space-between; align-items: center; padding: 0 0.5cqw; box-shadow: inset 0 0.2cqw 0.4cqw rgba(0,0,0,0.1); }
+        .pill-btn { background: none; border: none; font-size: 0.9cqw; font-weight: 700; color: #594d42; cursor: pointer; padding: 0 0.4cqw; }
+        .pill-btn:hover { color: #2b1808; }
+        .bet-value { font-size: 1.2cqw; font-weight: 800; color: #382e25; }
+        .actions-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 0.2cqw; }
+        .btn-3d { border: none; border-radius: 50%; color: white; font-weight: 700; cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; transition: top 0.1s, box-shadow 0.1s; }
+        .btn-3d:active { top: 0.3cqw; box-shadow: none !important; }
+        .btn-purple { width: 3.2cqw; height: 3.2cqw; font-size: 1.6cqw; background: linear-gradient(to bottom, #9c6ade, #7a46b5); box-shadow: 0 0.3cqw 0 #4a2c66; border: 0.15cqw solid #6e4494; }
+        .btn-orange { width: 3.2cqw; height: 3.2cqw; font-size: 1.4cqw; background: linear-gradient(to bottom, #ea7d27, #c45d0f); box-shadow: 0 0.3cqw 0 #8f4209; border: 0.15cqw solid #b05713; }
+        .btn-blue { border-radius: 0.8cqw; height: 3.2cqw; width: 10cqw; font-size: 1.4cqw; font-family: 'Fredoka', sans-serif; font-weight: 800; text-transform: uppercase; background: linear-gradient(to bottom, #29aae1, #1c85b5); box-shadow: 0 0.3cqw 0 #105a7d; border: 0.15cqw solid #1e7ba3; text-shadow: 0 0.1cqw 0.1cqw rgba(0,0,0,0.2); }
+
+        .tooltip-box {
+            position: absolute; bottom: 0.5cqw; left: 50%; transform: translateX(-50%) translateY(0);
+            background: #221606; padding: 0.8cqw 1.2cqw; border-radius: 0.6cqw; border-left: 0.3cqw solid #a1887f; width: 11cqw;
+            box-shadow: 0 1cqw 2cqw rgba(0,0,0,0.5); z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.3s, transform 0.3s;
+        }
+        .tooltip-box.active { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .tooltip-box::after { content: ''; position: absolute; left: 50%; bottom: -0.5cqw; transform: translateX(-50%); border-width: 0.5cqw 0.5cqw 0 0.5cqw; border-style: solid; border-color: #221606 transparent transparent transparent; }
+        .tt-row { display: flex; justify-content: space-between; font-size: 0.9cqw; margin-bottom: 0.3cqw; }
+        .tt-label { color: #bdbdbd; font-weight: 600; }
+        .tt-val { color: #fff; font-weight: 700; }
+
+        /* === WIN SCREEN === */
+        #win-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 1s;
+            background: rgba(0,0,0,0.3);
+        }
+        #win-screen.active { opacity: 1; pointer-events: all; }
+        .big-planet-container { width: 25cqw; height: 25cqw; position: relative; margin-top: 5cqw; animation: floatPlanet 6s ease-in-out infinite; }
+        @keyframes floatPlanet { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1cqw); } }
+        .planet-sphere { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffffff 0%, #a0a0a0 100%); box-shadow: inset -3cqw -3cqw 6cqw rgba(0,0,0,0.7), 0 0 5cqw rgba(255, 255, 255, 0.2); position: relative; overflow: hidden; }
+        .planet-surface {
+            position: absolute; top: 0; left: 0; width: 200%; height: 100%;
+            background-image: radial-gradient(circle at 20% 40%, rgba(0,0,0,0.15) 5%, transparent 6%), radial-gradient(circle at 60% 20%, rgba(0,0,0,0.2) 8%, transparent 9%), radial-gradient(circle at 50% 60%, rgba(0,0,0,0.1) 4%, transparent 5%), radial-gradient(circle at 80% 50%, rgba(0,0,0,0.15) 6%, transparent 7%);
+            opacity: 0.8; animation: rotatePlanet 30s linear infinite;
+        }
+        @keyframes rotatePlanet { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .flag-structure { position: absolute; top: -5%; left: 50%; transform-origin: bottom center; transform: translateX(-50%) rotate(5deg); width: 6cqw; height: 10cqw; z-index: 5; }
+        .pole { position: absolute; bottom: 0; left: 0; width: 0.4cqw; height: 100%; background: #444; border-radius: 0.2cqw; box-shadow: 1cqw 1cqw 1cqw rgba(0,0,0,0.5); }
+        .pole::after { content:''; position: absolute; bottom: -0.5cqw; left: -1cqw; width: 2.5cqw; height: 1cqw; background: rgba(0,0,0,0.6); border-radius: 50%; filter: blur(2px); transform: rotateX(60deg); }
+        .cloth {
+            position: absolute; top: 0.5cqw; left: 0.3cqw; width: 6cqw; height: 4cqw; background: linear-gradient(to bottom, #0057B8 50%, #FFD700 50%);
+            animation: wave 1.5s infinite alternate ease-in-out; transform-origin: left; box-shadow: 0.5cqw 0.5cqw 1cqw rgba(0,0,0,0.4); border-radius: 0 0.5cqw 0.5cqw 0;
+        }
+        @keyframes wave { from { transform: skewY(0deg); } to { transform: skewY(5deg) scaleX(0.95); } }
+        .win-title {
+            position: absolute; top: 10%; font-family: 'Fredoka', sans-serif; font-size: 8cqw; font-weight: 900; color: #FFD700; text-transform: uppercase;
+            text-shadow: 0 0.5cqw 0 #B8860B, 0 0 5cqw rgba(255, 215, 0, 0.9); animation: popInTitle 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; letter-spacing: 0.5cqw;
+        }
+        @keyframes popInTitle { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .continue-hint {
+            margin-top: 2cqw; font-size: 1.5cqw; color: white; animation: pulse 2s infinite; cursor: pointer;
+            background: rgba(255,255,255,0.1); padding: 1cqw 2cqw; border-radius: 2cqw; position: relative; z-index: 1002;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+        .confetti { position: absolute; width: 1cqw; height: 1cqw; border-radius: 50%; pointer-events: none; z-index: 900; }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-frame">
+        <div id="dim-overlay"></div>
+        <div class="stars-container" id="star-container"></div>
+        <div class="speed-lines-container" id="speed-lines"></div>
+        <div class="bg-cloud" style="width: 30cqw; height: 30cqw; top: 10%; left: 10%;"></div>
+        <div class="bg-cloud" style="width: 40cqw; height: 40cqw; top: 40%; right: -10%; animation-delay: -5s;"></div>
+        
+        <!-- WIN SCREEN -->
+        <div id="win-screen" onclick="closeWin()">
+            <div class="win-title">BIG WIN</div>
+            <div class="big-planet-container">
+                <div class="flag-structure">
+                    <div class="pole"></div>
+                    <div class="cloth"></div>
+                </div>
+                <div class="planet-sphere">
+                    <div class="planet-surface"></div>
+                </div>
+            </div>
+            <div class="continue-hint">TAP TO CONTINUE</div>
+        </div>
+
+        <div class="cloud-container">
+            <svg class="cloud-svg" viewBox="0 0 220 140">
+                <defs>
+                    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#f8bbd0;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#f48fb1;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <g fill="url(#cloudGrad)">
+                    <circle cx="50" cy="80" r="40" />
+                    <circle cx="90" cy="60" r="50" />
+                    <circle cx="140" cy="70" r="45" />
+                    <circle cx="180" cy="90" r="35" />
+                    <circle cx="110" cy="100" r="40" />
+                    <circle cx="60" cy="110" r="30" />
+                </g>
+                <circle cx="70" cy="50" r="10" fill="white" opacity="0.2"/>
+                <circle cx="120" cy="40" r="15" fill="white" opacity="0.2"/>
+                <circle cx="160" cy="60" r="8" fill="white" opacity="0.2"/>
+            </svg>
+            <div class="sign-group">
+                <div class="sign-board">
+                    <div class="sign-title">Moooon</div>
+                    <div class="sign-sub" id="km-counter">0 km</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="lanes-grid" id="lanes"></div>
+        </div>
+
+        <div id="character-wrap">
+            <div id="target-point"></div> 
+            <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; filter: drop-shadow(0 0.4cqw 0.4cqw rgba(0,0,0,0.3));">
+                <g transform="translate(15, 20)">
+                    <rect x="15" y="25" width="40" height="35" rx="10" fill="#c62828" />
+                    <path d="M20,55 L20,70 L25,70 L25,55" fill="#3e2723"/>
+                    <path d="M45,55 L45,70 L50,70 L50,55" fill="#3e2723"/>
+                    <path d="M10,15 H60 V50 H10 Z" fill="#e57373" rx="8" style="fill:#ef5350; stroke:#b71c1c; stroke-width:2; stroke-linejoin:round;"/>
+                    <rect x="10" y="15" width="50" height="35" rx="8" fill="#ef5350" />
+                    <path d="M10,20 Q-5,10 5,-5 L12,15" fill="white" stroke="#cfd8dc" stroke-width="1"/>
+                    <path d="M60,20 Q75,10 65,-5 L58,15" fill="white" stroke="#cfd8dc" stroke-width="1"/>
+                    <circle cx="25" cy="30" r="6" fill="white"/>
+                    <circle cx="25" cy="30" r="2" fill="black"/>
+                    <circle cx="45" cy="30" r="6" fill="white"/>
+                    <circle cx="45" cy="30" r="2" fill="black"/>
+                    <path d="M18,25 L32,25" stroke="#3e2723" stroke-width="2"/>
+                    <path d="M38,25 L52,25" stroke="#3e2723" stroke-width="2"/>
+                    <rect x="25" y="40" width="20" height="8" rx="4" fill="#3e2723"/>
+                    <circle cx="29" cy="44" r="1.5" fill="#a1887f"/>
+                    <circle cx="41" cy="44" r="1.5" fill="#a1887f"/>
+                </g>
+            </svg>
+        </div>
+
+        <div class="controls-wrapper">
+            <div class="panel-bg">
+                <div class="bet-row">
+                    <div class="bet-group">
+                        <div class="bet-label">MIN</div>
+                        <button class="symbol-btn" onclick="updateBet(-1)">−</button>
+                    </div>
+                    <div class="bet-group">
+                        <div class="bet-label">BET AMOUNT</div>
+                        <div class="input-pill">
+                            <button class="pill-btn" onclick="updateBet(0, 0.5)">½</button>
+                            <div class="bet-value" id="bet-display">$10.00</div>
+                            <button class="pill-btn" onclick="updateBet(0, 2)">2x</button>
+                        </div>
+                    </div>
+                    <div class="bet-group">
+                        <div class="bet-label">MAX</div>
+                        <button class="symbol-btn" onclick="updateBet(1)">+</button>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button class="btn-3d btn-purple">?</button>
+                    <button class="btn-3d btn-blue" id="refresh-btn">REFRESH</button>
+                    <button class="btn-3d btn-orange">»</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const laneColors = { 1: '#7cb342', 2: '#26a69a', 3: '#42a5f5', 4: '#7e57c2', 5: '#ec407a', 6: '#ff7043' };
+        
+        const lanesStructure = [
+            { id: 1, base: 1.1, cls: 'b-1x' }, 
+            { id: 2, base: 2, cls: 'b-2x' }, 
+            { id: 3, base: 10, cls: 'b-10x' },
+            { id: 'sep' }, 
+            { id: 4, base: 20, cls: 'b-20x' }, 
+            { id: 5, base: 50, cls: 'b-50x' }, 
+            { id: 6, base: 300, cls: 'b-300x' } 
+        ];
+
+        const lanesContainer = document.getElementById('lanes');
+        const charWrap = document.getElementById('character-wrap');
+        const targetPoint = document.getElementById('target-point');
+        const gameFrame = document.getElementById('game-frame');
+        const kmCounter = document.getElementById('km-counter');
+        const winScreen = document.getElementById('win-screen');
+        const gameArea = document.querySelector('.game-area');
+        const cloudContainer = document.querySelector('.cloud-container');
+        const controlsWrapper = document.querySelector('.controls-wrapper');
+        const dimOverlay = document.getElementById('dim-overlay');
+        
+        let currentBet = 10.00;
+        let selectedLaneIndex = 0; 
+        let tooltipEl = null;
+        let isAnimating = false; 
+        
+        let currentKm = 0;
+        const TARGET_KM = 500; 
+
+        let laneMultipliers = {};
+        
+        function generateLaneMultiplier(laneId) {
+            const lane = lanesStructure.find(l => l.id === laneId);
+            if (!lane) return 1;
+            
+            let variance = 0;
+            if (lane.base < 2) variance = 0.4;
+            else if (lane.base < 10) variance = 1.5;
+            else if (lane.base < 50) variance = 10;
+            else variance = 50;
+
+            let val = lane.base + (Math.random() * variance * 2 - variance);
+            if (val < 10) return val.toFixed(1);
+            return Math.round(val);
+        }
+        
+        function getRandomVal(laneId) {
+            if (laneMultipliers[laneId] === undefined) {
+                laneMultipliers[laneId] = generateLaneMultiplier(laneId);
+            }
+            return laneMultipliers[laneId];
+        }
+        
+        function refreshLaneMultiplier(laneId) {
+            laneMultipliers[laneId] = generateLaneMultiplier(laneId);
+        }
+        
+        function refreshAllMultipliers() {
+            laneMultipliers = {};
+            lanesStructure.forEach(lane => {
+                if (lane.id !== 'sep') {
+                    laneMultipliers[lane.id] = generateLaneMultiplier(lane.id);
+                }
+            });
+        }
+
+        const starContainer = document.getElementById('star-container');
+        for(let i=0; i<50; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.top = Math.random()*100 + '%';
+            s.style.left = Math.random()*100 + '%';
+            const size = Math.random()*0.3 + 0.1;
+            s.style.width = size + 'cqw';
+            s.style.height = size + 'cqw';
+            s.style.animationDuration = (8 + Math.random()*10) + 's';
+            s.style.animationDelay = (Math.random()*-20) + 's';
+            starContainer.appendChild(s);
+        }
+
+        function init() {
+            createTooltip();
+            initLanesStructure();
+            moveBullToCenter();
+            updateKmDisplay(); 
+        }
+
+        function createTooltip() {
+            tooltipEl = document.createElement('div');
+            tooltipEl.className = 'tooltip-box';
+            tooltipEl.innerHTML = `<div class="tt-row"><span class="tt-label">Total Bets</span><span class="tt-val">x10</span></div><div class="tt-row"><span class="tt-label">Win per Bet</span><span class="tt-val">$11</span></div>`;
+        }
+
+        function initLanesStructure() {
+            regenerateBoard(); 
+        }
+
+        function updateKmDisplay() {
+            kmCounter.innerText = `${currentKm} km`;
+        }
+
+        function checkWin() {
+            if (currentKm >= TARGET_KM) {
+                setTimeout(() => {
+                    winScreen.classList.add('active');
+                    gameArea.classList.add('hidden');
+                    cloudContainer.classList.add('hidden');
+                    controlsWrapper.classList.add('hidden'); 
+                    charWrap.classList.add('winning');
+                    createParticles();
+                    currentKm = 0;
+                    updateKmDisplay();
+                }, 800); 
+            }
+        }
+
+        function createParticles() {
+            const colors = ['#FFD700', '#0057B8', '#ffffff', '#FFA500', '#FF00FF', '#00FF00'];
+            for(let i=0; i<150; i++) {
+                const p = document.createElement('div');
+                p.className = 'confetti';
+                p.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+                p.style.left = '50%';
+                p.style.top = '50%';
+                
+                if (Math.random() > 0.5) p.style.borderRadius = '0'; 
+
+                winScreen.appendChild(p);
+                
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 15 + Math.random() * 25; 
+                const dx = Math.cos(angle) * velocity + 'cqw';
+                const dy = Math.sin(angle) * velocity + 'cqw';
+                
+                const rot = Math.random() * 720 - 360;
+
+                p.animate([
+                    { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${dx}, ${dy}) scale(0.5) rotate(${rot}deg)`, opacity: 0 }
+                ], {
+                    duration: 1500 + Math.random()*1500,
+                    easing: 'cubic-bezier(0, .9, .57, 1)',
+                    fill: 'forwards'
+                });
+                
+                setTimeout(() => p.remove(), 3000);
+            }
+        }
+
+        function closeWin() {
+            winScreen.classList.remove('active');
+            gameArea.classList.remove('hidden');
+            cloudContainer.classList.remove('hidden');
+            controlsWrapper.classList.remove('hidden'); 
+            charWrap.classList.remove('winning');
+            moveBullToCenter();
+        }
+
+        function regenerateBoard() {
+            refreshAllMultipliers();
+            
+            lanesContainer.innerHTML = '';
+            let logicalIndex = 0;
+            lanesStructure.forEach((lane) => {
+                if (lane.id === 'sep') {
+                    const sep = document.createElement('div');
+                    sep.className = 'separator';
+                    lanesContainer.appendChild(sep);
+                    return;
+                }
+                const col = document.createElement('div');
+                col.className = 'lane-col';
+                col.id = `lane-${lane.id}`;
+                col.dataset.index = logicalIndex;
+                
+                const bubbleContainer = document.createElement('div');
+                bubbleContainer.className = 'bubbles-container';
+                col.appendChild(bubbleContainer);
+
+                const arrow = document.createElement('div');
+                arrow.className = 'lane-arrow';
+                arrow.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 4l-8 8h6v8h4v-8h6z" /></svg>`;
+                arrow.onclick = () => handleLaneClick(col.dataset.index, arrow, col);
+                col.appendChild(arrow);
+
+                for(let i=0; i<5; i++) { 
+                    if(Math.random() > 0.3) { 
+                        createStaticBubble(bubbleContainer, lane, i); 
+                    }
+                }
+                lanesContainer.appendChild(col);
+                logicalIndex++;
+            });
+        }
+
+        function createStaticBubble(container, lane, index) {
+            const b = document.createElement('div');
+            b.className = `bubble ${lane.cls} pop-in`; 
+            b.innerText = getRandomVal(lane.id) + 'x';
+            b.style.bottom = `${index * 5.7}cqw`; 
+            b.style.opacity = '1';
+            b.style.transform = 'translateX(-50%)'; 
+            b.style.top = 'auto'; 
+            container.appendChild(b);
+        }
+
+        function playLaneAction(targetLaneIndex) {
+            charWrap.classList.add('absorbing');
+            gameFrame.classList.add('hyperspace');
+            activateSpeedLines();
+            
+            document.querySelector('.lanes-grid').classList.add('focus-mode');
+            dimOverlay.classList.add('active');
+
+            let targetLaneConfig = null;
+            let idx = 0;
+            for(let l of lanesStructure) {
+                if(l.id === 'sep') continue;
+                if(idx === targetLaneIndex) {
+                    targetLaneConfig = l;
+                    break;
+                }
+                idx++;
+            }
+            
+            if(targetLaneConfig) {
+                const color = laneColors[targetLaneConfig.id] || '#ffffff';
+                charWrap.style.filter = `drop-shadow(0 0 3cqw ${color}) brightness(1.2)`;
+            }
+
+            const targetRect = targetPoint.getBoundingClientRect();
+
+            let logicalIndex = 0;
+            lanesStructure.forEach((lane) => {
+                if (lane.id === 'sep') return;
+
+                const col = document.getElementById(`lane-${lane.id}`);
+                const bubbleContainer = col.querySelector('.bubbles-container');
+                const isSelected = (logicalIndex === targetLaneIndex);
+                
+                if (isSelected) {
+                    col.classList.add('highlighted');
+                    
+                    const bullRect = charWrap.getBoundingClientRect();
+                    const containerRect = bubbleContainer.getBoundingClientRect();
+                    const clipBottom = containerRect.bottom - (bullRect.top + bullRect.height / 2);
+                    bubbleContainer.style.setProperty('--clip-bottom', `${clipBottom}px`);
+                } else {
+                    col.classList.remove('highlighted');
+                }
+
+                const existingBubbles = bubbleContainer.querySelectorAll('.bubble');
+                const bubbleColor = laneColors[targetLaneConfig?.id] || '#ffffff';
+                
+                existingBubbles.forEach((b, i) => {
+                    if (isSelected) {
+                        setTimeout(() => {
+                            b.classList.add('glowing');
+                            b.style.transition = 'transform 0.4s ease-in, box-shadow 0.15s';
+                            b.style.transform = 'translateX(-50%) translateY(50cqw)';
+                            
+                            setTimeout(() => {
+                                charWrap.style.setProperty('--bull-scale', '1.08');
+                                charWrap.style.filter = `drop-shadow(0 0 3cqw ${bubbleColor}) brightness(1.3)`;
+                                
+                                setTimeout(() => {
+                                    charWrap.style.setProperty('--bull-scale', '1');
+                                    charWrap.style.filter = 'drop-shadow(0 0.4cqw 0.4cqw rgba(0,0,0,0.3))';
+                                }, 80);
+                            }, 200);
+                        }, i * 30); 
+                    } else {
+                        b.style.filter = 'brightness(0.4)';
+                        setTimeout(() => {
+                            b.style.transition = 'transform 0.4s ease-in';
+                            b.style.transform = 'translateX(-50%) translateY(80cqw)';
+                        }, i * 30);
+                    }
+                });
+                
+                setTimeout(() => { existingBubbles.forEach(b => b.remove()); }, 550);
+
+                const STREAM_LENGTH = 15;
+                const REAL_COUNT = 5;
+                const DUMMY_COUNT = STREAM_LENGTH - REAL_COUNT; 
+                
+                setTimeout(() => {
+                    refreshLaneMultiplier(lane.id);
+                    
+                    const newBubbles = [];
+                    for(let i=0; i<STREAM_LENGTH; i++) {
+                        const isReal = i >= DUMMY_COUNT;
+                        const shouldExist = isReal ? (Math.random() > 0.3) : true;
+
+                        if (shouldExist) {
+                            const b = document.createElement('div');
+                            b.className = `bubble ${lane.cls}`; 
+                            b.innerText = getRandomVal(lane.id) + 'x';
+                            
+                            const targetBottom = (i - DUMMY_COUNT) * 5.7; 
+                            b.style.bottom = `${targetBottom}cqw`;
+                            b.style.left = '50%';
+                            b.style.transform = 'translateX(-50%) translateY(-200cqh)'; 
+                            b.style.opacity = '1'; 
+                            b.style.top = 'auto'; 
+                            
+                            bubbleContainer.appendChild(b);
+                            newBubbles.push(b);
+                        }
+                    }
+
+                    requestAnimationFrame(() => {
+                        bubbleContainer.offsetHeight; 
+                        newBubbles.forEach(b => {
+                            b.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)'; 
+                            b.style.transform = 'translateX(-50%) translateY(0)'; 
+                        });
+                    });
+
+                    setTimeout(() => {
+                        newBubbles.forEach((b) => {
+                            if (parseFloat(b.style.bottom) < 0) {
+                                b.remove();
+                            }
+                        });
+                    }, 400);
+
+                }, 400); 
+
+                logicalIndex++;
+            });
+
+            setTimeout(() => {
+                charWrap.style.filter = 'drop-shadow(0 0.4cqw 0.4cqw rgba(0,0,0,0.3))';
+                charWrap.classList.remove('absorbing');
+                gameFrame.classList.remove('hyperspace');
+                moveBullToCenter();
+                
+                document.querySelector('.lanes-grid').classList.remove('focus-mode');
+                dimOverlay.classList.remove('active');
+                document.querySelectorAll('.lane-col').forEach(c => c.classList.remove('highlighted'));
+                
+                currentKm += 100;
+                updateKmDisplay();
+                checkWin();
+                
+                isAnimating = false;
+            }, 850); 
+        }
+
+        function activateSpeedLines() {
+            const container = document.getElementById('speed-lines');
+            if(!container) return;
+            container.innerHTML = ''; 
+            container.classList.add('active');
+            for(let i=0; i<40; i++) {
+                const line = document.createElement('div');
+                line.className = 'speed-line';
+                line.style.left = Math.random() * 100 + '%';
+                line.style.height = (30 + Math.random() * 50) + 'cqh';
+                line.style.width = (1 + Math.random() * 2) + 'px';
+                line.style.opacity = 0.5 + Math.random() * 0.5;
+                line.style.animation = `warpSpeed ${0.15 + Math.random() * 0.2}s linear forwards`;
+                line.style.animationDelay = Math.random() * 0.1 + 's';
+                container.appendChild(line);
+            }
+            setTimeout(() => { container.classList.remove('active'); }, 600);
+        }
+
+        function handleLaneClick(index, btn, colElement) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            index = parseInt(index);
+            selectedLaneIndex = index;
+            
+            moveBull(index);
+            
+            btn.style.transform = "translateX(-50%) scale(0.9)";
+            setTimeout(() => btn.style.transform = "translateX(-50%) scale(1)", 150);
+
+            if (tooltipEl) {
+                tooltipEl.classList.remove('active');
+                colElement.appendChild(tooltipEl);
+                void tooltipEl.offsetWidth; 
+                tooltipEl.classList.add('active');
+            }
+
+            setTimeout(() => {
+                playLaneAction(index);
+            }, 300);
+        }
+
+        // --- ВИПРАВЛЕНА ФУНКЦІЯ ПЕРЕМІЩЕННЯ (PERCENTAGE BASED) ---
+        function moveBull(index) {
+            const targets = document.querySelectorAll('.lane-col');
+            let targetEl = null;
+            targets.forEach(el => { if(parseInt(el.dataset.index) === index) targetEl = el; });
+            if (!targetEl) return;
+            
+            // Отримуємо рамку гри
+            const frameRect = gameFrame.getBoundingClientRect();
+            // Отримуємо цільову колонку
+            const targetRect = targetEl.getBoundingClientRect();
+
+            // Знаходимо центр цілі відносно екрану
+            const targetCenterScreen = targetRect.left + targetRect.width / 2;
+            
+            // Знаходимо центр відносно ЛІВОГО КРАЮ РАМКИ
+            const relativeX = targetCenterScreen - frameRect.left;
+            
+            // Переводимо у відсотки від ширини рамки
+            const percentage = (relativeX / frameRect.width) * 100;
+            
+            charWrap.style.left = `${percentage}%`;
+        }
+
+        function moveBullToCenter() {
+            charWrap.style.left = '50%';
+        }
+
+        function updateBet(add, mul) {
+            if (mul) currentBet *= mul;
+            else currentBet += add;
+            if (currentBet < 1) currentBet = 1;
+            document.getElementById('bet-display').innerText = `$${currentBet.toFixed(2)}`;
+        }
+        
+        document.getElementById('refresh-btn').onclick = () => {
+             if (isAnimating) return;
+             const btn = document.getElementById('refresh-btn');
+             btn.style.transform = "scale(0.95)";
+             setTimeout(() => btn.style.transform = "scale(1)", 100);
+             if(tooltipEl) tooltipEl.classList.remove('active');
+             
+             regenerateBoard();
+        };
+
+        window.onload = init;
+        window.onresize = () => { 
+            // Оскільки ми на відсотках, ресайз обробляти не обов'язково, 
+            // але для точності залишаємо, щоб переконатися, що все на місці
+            if(isAnimating) requestAnimationFrame(() => moveBull(selectedLaneIndex));
+            else moveBullToCenter();
+        };
+
+    </script>
+</body>
+</html>
